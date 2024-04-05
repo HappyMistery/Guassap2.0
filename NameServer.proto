@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+// Message representing an empty response
+message Empty {}
+
+// Message representing a chat identifier
+message ChatId {
+  string id = 1;
+}
+
+// Message representing a chat namespace entry
+message ChatNamespaceEntry {
+  string id = 1;
+  string address = 2;
+}
+
+// Service for managing chat namespace and addresses
+service NameServer {
+  // Registers the IP address and port associated with a username
+  rpc RegisterAddress (UserAddress) returns (Empty);
+
+  // Retrieves the address associated with a chat ID
+  rpc GetChatAddress (ChatId) returns (ChatAddress);
+}
+
+// Message representing a user and their address
+message UserAddress {
+  string username = 1;
+  string ip_address = 2;
+  int32 port = 3;
+}
+
+// Message representing a chat address
+message ChatAddress {
+  string address = 1;
+}

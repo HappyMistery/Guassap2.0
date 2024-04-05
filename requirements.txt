@@ -1,2 +1,4 @@
+redis
+pika
 grpcio
-grpcio-tools
+grpcio_tools

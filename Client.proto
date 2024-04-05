@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+// Message representing an empty response
+message Empty {}
+
+// Message representing a user
+message User {
+  string username = 1;
+}
+
+// Message representing a chat message
+message Message {
+  string content = 1;
+  User sender = 2;
+  int64 timestamp = 3; // Unix timestamp in milliseconds
+}
+
+// Message representing a chat identifier
+message ChatId {
+  string id = 1;
+}
+
+// Service for managing chat connections and messages
+service ChatService {
+  // Connects to an existing chat (private or group)
+  rpc ConnectChat (ChatId) returns (stream Message);
+
+  // Starts listening to messages in a group chat
+  // Creates the chat if it doesn't exist
+  rpc SubscribeToGroupChat (ChatId) returns (stream Message);
+
+  // Requests a list of active chats
+  rpc DiscoverChats (Empty) returns (stream ChatId);
+
+  // Sends an insult message to another client (undefined behavior)
+  rpc SendInsult (User) returns (Empty);
+
+  // Establishes a connection between two clients for private chat
+  rpc StartPrivateChat (User) returns (stream Message);
+}
+
+// Client UI service
+service ClientUIService {
+  // Asks for the client's username
+  rpc GetUsername (Empty) returns (User);
+
+  // Shows menu options and handles client requests
+  rpc ShowMenuOptions (Empty) returns (stream MenuOption);
+
+  // Connects to a chat (either private or group chat) by specifying its id
+  rpc ConnectChat (ChatId) returns (stream Message);
+
+  // Starts listening to the messages of a group chat by specifying its id
+  // If the group chat in non-existent, the server must create it from scratch
+  rpc SubscribeToGroupChat (ChatId) returns (stream Message);
+
+  // Asks the server for a list of chats active at the time of the request
+  // Active chats are all group chats and private chats of currently connected clients
+  rpc DiscoverChats (Empty) returns (stream ChatId);
+
+  // Sends an insult message to a (undefined) client
+  rpc AccessInsultChannel (User) returns (stream Message);
+
+  // Establishes a private chat with another client
+  rpc StartPrivateChat (User) returns (stream Message);
+}
+
+// Message representing a menu option
+message MenuOption {
+  int32 option_number = 1;
+  string description = 2;
+}
