@@ -16,8 +16,8 @@ class RegisterServiceStub(object):
         """
         self.register_user = channel.unary_unary(
                 '/user.RegisterService/register_user',
-                request_serializer=Server__pb2.RegisterRequest.SerializeToString,
-                response_deserializer=Server__pb2.RegisterResponse.FromString,
+                request_serializer=Server__pb2.Request.SerializeToString,
+                response_deserializer=Server__pb2.Response.FromString,
                 )
 
 
@@ -35,8 +35,8 @@ def add_RegisterServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'register_user': grpc.unary_unary_rpc_method_handler(
                     servicer.register_user,
-                    request_deserializer=Server__pb2.RegisterRequest.FromString,
-                    response_serializer=Server__pb2.RegisterResponse.SerializeToString,
+                    request_deserializer=Server__pb2.Request.FromString,
+                    response_serializer=Server__pb2.Response.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -60,7 +60,7 @@ class RegisterService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/user.RegisterService/register_user',
-            Server__pb2.RegisterRequest.SerializeToString,
-            Server__pb2.RegisterResponse.FromString,
+            Server__pb2.Request.SerializeToString,
+            Server__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

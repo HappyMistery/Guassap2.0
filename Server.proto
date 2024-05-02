@@ -2,15 +2,14 @@ syntax = "proto3";
 
 package user;
 
-service RegisterService {
-  rpc register_user (RegisterRequest) returns (RegisterResponse) {}
-}
-
-message RegisterRequest {
+message Request {
   string username = 1;
 }
 
-message RegisterResponse {
+message Response {
   bool success = 1;
-  string message = 2;
+}
+
+service RegisterService {
+  rpc register_user (Request) returns (Response) {}
 }

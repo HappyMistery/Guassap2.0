@@ -25,8 +25,8 @@ def start():
         server.stop(0)
     
 class RegisterServiceServicer(Server_pb2_grpc.RegisterServiceServicer):
-    def register_user(self, request: Server_pb2.RegisterRequest, context) -> Server_pb2.RegisterResponse:
+    def register_user(self, request: Server_pb2.Request, context) -> Server_pb2.Response:
         registration = register_service.register_user(request.username)
-        response = Server_pb2.RegisterResponse()
+        response = Server_pb2.Response()
         response.value.extend(registration)
         return response

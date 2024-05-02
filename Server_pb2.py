@@ -14,17 +14,17 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cServer.proto\x12\x04user\"#\n\x0fRegisterRequest\x12\x10\n\x08username\x18\x01 \x01(\t\"4\n\x10RegisterResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2S\n\x0fRegisterService\x12@\n\rregister_user\x12\x15.user.RegisterRequest\x1a\x16.user.RegisterResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cServer.proto\x12\x04user\"\x1b\n\x07Request\x12\x10\n\x08username\x18\x01 \x01(\t\"\x1b\n\x08Response\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x43\n\x0fRegisterService\x12\x30\n\rregister_user\x12\r.user.Request\x1a\x0e.user.Response\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'Server_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_REGISTERREQUEST']._serialized_start=22
-  _globals['_REGISTERREQUEST']._serialized_end=57
-  _globals['_REGISTERRESPONSE']._serialized_start=59
-  _globals['_REGISTERRESPONSE']._serialized_end=111
-  _globals['_REGISTERSERVICE']._serialized_start=113
-  _globals['_REGISTERSERVICE']._serialized_end=196
+  _globals['_REQUEST']._serialized_start=22
+  _globals['_REQUEST']._serialized_end=49
+  _globals['_RESPONSE']._serialized_start=51
+  _globals['_RESPONSE']._serialized_end=78
+  _globals['_REGISTERSERVICE']._serialized_start=80
+  _globals['_REGISTERSERVICE']._serialized_end=147
 # @@protoc_insertion_point(module_scope)
