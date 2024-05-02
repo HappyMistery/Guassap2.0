@@ -5,7 +5,7 @@ import grpc
 import Server_pb2 as Server__pb2
 
 
-class UserServiceStub(object):
+class RegisterServiceStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,13 +15,13 @@ class UserServiceStub(object):
             channel: A grpc.Channel.
         """
         self.register_user = channel.unary_unary(
-                '/user.UserService/register_user',
+                '/user.RegisterService/register_user',
                 request_serializer=Server__pb2.RegisterRequest.SerializeToString,
                 response_deserializer=Server__pb2.RegisterResponse.FromString,
                 )
 
 
-class UserServiceServicer(object):
+class RegisterServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def register_user(self, request, context):
@@ -31,7 +31,7 @@ class UserServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_UserServiceServicer_to_server(servicer, server):
+def add_RegisterServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'register_user': grpc.unary_unary_rpc_method_handler(
                     servicer.register_user,
@@ -40,12 +40,12 @@ def add_UserServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'user.UserService', rpc_method_handlers)
+            'user.RegisterService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class UserService(object):
+class RegisterService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -59,7 +59,7 @@ class UserService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/user.UserService/register_user',
+        return grpc.experimental.unary_unary(request, target, '/user.RegisterService/register_user',
             Server__pb2.RegisterRequest.SerializeToString,
             Server__pb2.RegisterResponse.FromString,
             options, channel_credentials,

@@ -89,9 +89,10 @@ def start():
         username = username_entry.get()
         
         with grpc.insecure_channel('localhost:50051') as channel:
-            stub = Server_pb2_grpc.UserServiceStub(channel)
-            request = Server_pb2.RegisterRequest(username=username)
-            response =  stub.register_user(request)
+            stub = Server_pb2_grpc.RegisterServiceStub(channel)
+            register = Server_pb2.RegisterRequest(username=username)
+            stub.register_user(register)
+            response =  stub.register_user(register)
             channel.close()
         if response.success:
             print("Usuari Registrat")
