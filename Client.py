@@ -3,6 +3,8 @@ import tkinter as tk
 
 import Client_pb2
 import Client_pb2_grpc
+import Server_pb2
+import Server_pb2_grpc
 
 
 #Logo position and size
@@ -85,6 +87,17 @@ def start():
     def set_username_and_close():
         global username
         username = username_entry.get()
+        
+        with grpc.insecure_channel('localhost:50051') as channel:
+            stub = Server_pb2_grpc.UserServiceStub(channel)
+            request = Server_pb2.RegisterRequest(username=username)
+            response =  stub.register_user(request)
+            channel.close()
+        if response.success:
+            print("Usuari Registrat")
+        else:
+            print("Usuari Identificat")
+        
         usr_label = tk.Label(header_frame, text=username, bg="#222", fg="white", font=("Verdana", 15))
         usr_label.pack(anchor="ne", padx=10, pady=30)
         frame.destroy()
@@ -97,7 +110,7 @@ def start():
     username_label.grid(row=0, column=0, padx=10, pady=10)
     username_entry = tk.Entry(frame)
     username_entry.grid(row=1, column=0, padx=10)
-    username_button = tk.Button(frame, text="Login", command=set_username_and_close, bg="#555")
+    username_button = tk.Button(frame, text="Login/Register", command=set_username_and_close, bg="#555")
     username_button.grid(row=2, column=0, padx=10, pady=15)
     
     global option_buttons

@@ -1,5 +1,4 @@
-import subprocess
-import Client
+import subprocess, threading
 
 def main():
     try:
@@ -10,10 +9,22 @@ def main():
        
     #python3 -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. --pyi_out=. ./Client.proto
     subprocess.check_call(['python3', '-m', 'grpc_tools.protoc', '-I./', '--python_out=.', '--grpc_python_out=.', '--pyi_out=.', './Client.proto'])
+    #python3 -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. --pyi_out=. ./Server.proto
+    subprocess.check_call(['python3', '-m', 'grpc_tools.protoc', '-I./', '--python_out=.', '--grpc_python_out=.', '--pyi_out=.', './Server.proto'])
     #python3 -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. --pyi_out=. ./MessageBroker.proto
     subprocess.check_call(['python3', '-m', 'grpc_tools.protoc', '-I./', '--python_out=.', '--grpc_python_out=.', '--pyi_out=.', './MessageBroker.proto'])
     #python3 -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. --pyi_out=. ./NameServer.proto
     subprocess.check_call(['python3', '-m', 'grpc_tools.protoc', '-I./', '--python_out=.', '--grpc_python_out=.', '--pyi_out=.', './NameServer.proto'])
-    Client.start()
+    
+    import Client, Server
+    
+    client_thread = threading.Thread(target=Client.start)
+    server_thread = threading.Thread(target=Server.start)
+    
+    client_thread.start()
+    server_thread.start()
+
+    client_thread.join()
+    server_thread.join()
 main()
     
