@@ -4,11 +4,7 @@ from typing import ClassVar as _ClassVar, Optional as _Optional
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class Empty(_message.Message):
-    __slots__ = ()
-    def __init__(self) -> None: ...
-
-class ChatId(_message.Message):
+class IdChat(_message.Message):
     __slots__ = ("id",)
     ID_FIELD_NUMBER: _ClassVar[int]
     id: str
@@ -23,17 +19,21 @@ class ChatNamespaceEntry(_message.Message):
     def __init__(self, id: _Optional[str] = ..., address: _Optional[str] = ...) -> None: ...
 
 class UserAddress(_message.Message):
-    __slots__ = ("username", "ip_address", "port")
+    __slots__ = ("username", "ip_address")
     USERNAME_FIELD_NUMBER: _ClassVar[int]
     IP_ADDRESS_FIELD_NUMBER: _ClassVar[int]
-    PORT_FIELD_NUMBER: _ClassVar[int]
     username: str
     ip_address: str
-    port: int
-    def __init__(self, username: _Optional[str] = ..., ip_address: _Optional[str] = ..., port: _Optional[int] = ...) -> None: ...
+    def __init__(self, username: _Optional[str] = ..., ip_address: _Optional[str] = ...) -> None: ...
 
 class ChatAddress(_message.Message):
     __slots__ = ("address",)
     ADDRESS_FIELD_NUMBER: _ClassVar[int]
     address: str
     def __init__(self, address: _Optional[str] = ...) -> None: ...
+
+class Response(_message.Message):
+    __slots__ = ("success",)
+    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    success: bool
+    def __init__(self, success: bool = ...) -> None: ...

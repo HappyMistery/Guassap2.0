@@ -15,14 +15,14 @@ class NameServerStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.RegisterAddress = channel.unary_unary(
-                '/NameServer/RegisterAddress',
+        self.RegisterUser = channel.unary_unary(
+                '/NameServer/RegisterUser',
                 request_serializer=NameServer__pb2.UserAddress.SerializeToString,
-                response_deserializer=NameServer__pb2.Empty.FromString,
+                response_deserializer=NameServer__pb2.Response.FromString,
                 )
         self.GetChatAddress = channel.unary_unary(
                 '/NameServer/GetChatAddress',
-                request_serializer=NameServer__pb2.ChatId.SerializeToString,
+                request_serializer=NameServer__pb2.IdChat.SerializeToString,
                 response_deserializer=NameServer__pb2.ChatAddress.FromString,
                 )
 
@@ -31,8 +31,8 @@ class NameServerServicer(object):
     """Service for managing chat namespace and addresses
     """
 
-    def RegisterAddress(self, request, context):
-        """Registers the IP address and port associated with a username
+    def RegisterUser(self, request, context):
+        """Registers the IP address associated with a username
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -48,14 +48,14 @@ class NameServerServicer(object):
 
 def add_NameServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'RegisterAddress': grpc.unary_unary_rpc_method_handler(
-                    servicer.RegisterAddress,
+            'RegisterUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.RegisterUser,
                     request_deserializer=NameServer__pb2.UserAddress.FromString,
-                    response_serializer=NameServer__pb2.Empty.SerializeToString,
+                    response_serializer=NameServer__pb2.Response.SerializeToString,
             ),
             'GetChatAddress': grpc.unary_unary_rpc_method_handler(
                     servicer.GetChatAddress,
-                    request_deserializer=NameServer__pb2.ChatId.FromString,
+                    request_deserializer=NameServer__pb2.IdChat.FromString,
                     response_serializer=NameServer__pb2.ChatAddress.SerializeToString,
             ),
     }
@@ -70,7 +70,7 @@ class NameServer(object):
     """
 
     @staticmethod
-    def RegisterAddress(request,
+    def RegisterUser(request,
             target,
             options=(),
             channel_credentials=None,
@@ -80,9 +80,9 @@ class NameServer(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/NameServer/RegisterAddress',
+        return grpc.experimental.unary_unary(request, target, '/NameServer/RegisterUser',
             NameServer__pb2.UserAddress.SerializeToString,
-            NameServer__pb2.Empty.FromString,
+            NameServer__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -98,7 +98,7 @@ class NameServer(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/NameServer/GetChatAddress',
-            NameServer__pb2.ChatId.SerializeToString,
+            NameServer__pb2.IdChat.SerializeToString,
             NameServer__pb2.ChatAddress.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

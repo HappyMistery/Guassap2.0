@@ -3,8 +3,8 @@ import tkinter as tk
 
 import Client_pb2
 import Client_pb2_grpc
-import Server_pb2
-import Server_pb2_grpc
+import NameServer_pb2
+import NameServer_pb2_grpc
 
 
 #Logo position and size
@@ -89,11 +89,11 @@ def start():
         username = username_entry.get()
         
         with grpc.insecure_channel('localhost:50051') as channel:
-            stub = Server_pb2_grpc.RegisterServiceStub(channel)
-            register = Server_pb2.Request(username=username)
-            response =  stub.register_user(register)
+            stub = NameServer_pb2_grpc.NameServerStub(channel)
+            user = NameServer_pb2.UserAddress(username=username, ip_address='localhost')
+            response =  stub.RegisterUser(user)
             channel.close()
-        if response.success:
+        if response:
             print("Usuari Registrat")
         else:
             print("Usuari Identificat")
