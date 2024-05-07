@@ -29,11 +29,3 @@ class ChatId(_message.Message):
     ID_FIELD_NUMBER: _ClassVar[int]
     id: str
     def __init__(self, id: _Optional[str] = ...) -> None: ...
-
-class MenuOption(_message.Message):
-    __slots__ = ("option_number", "description")
-    OPTION_NUMBER_FIELD_NUMBER: _ClassVar[int]
-    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
-    option_number: int
-    description: str
-    def __init__(self, option_number: _Optional[int] = ..., description: _Optional[str] = ...) -> None: ...

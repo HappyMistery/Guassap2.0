@@ -20,6 +20,11 @@ class NameServerStub(object):
                 request_serializer=NameServer__pb2.UserAddress.SerializeToString,
                 response_deserializer=NameServer__pb2.Response.FromString,
                 )
+        self.GetUserInfo = channel.unary_unary(
+                '/NameServer/GetUserInfo',
+                request_serializer=NameServer__pb2.Usu.SerializeToString,
+                response_deserializer=NameServer__pb2.ChatAddress.FromString,
+                )
         self.GetChatAddress = channel.unary_unary(
                 '/NameServer/GetChatAddress',
                 request_serializer=NameServer__pb2.IdChat.SerializeToString,
@@ -33,6 +38,13 @@ class NameServerServicer(object):
 
     def RegisterUser(self, request, context):
         """Registers the IP address associated with a username
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetUserInfo(self, request, context):
+        """Gets the ip:port of a given username
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -52,6 +64,11 @@ def add_NameServerServicer_to_server(servicer, server):
                     servicer.RegisterUser,
                     request_deserializer=NameServer__pb2.UserAddress.FromString,
                     response_serializer=NameServer__pb2.Response.SerializeToString,
+            ),
+            'GetUserInfo': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetUserInfo,
+                    request_deserializer=NameServer__pb2.Usu.FromString,
+                    response_serializer=NameServer__pb2.ChatAddress.SerializeToString,
             ),
             'GetChatAddress': grpc.unary_unary_rpc_method_handler(
                     servicer.GetChatAddress,
@@ -83,6 +100,23 @@ class NameServer(object):
         return grpc.experimental.unary_unary(request, target, '/NameServer/RegisterUser',
             NameServer__pb2.UserAddress.SerializeToString,
             NameServer__pb2.Response.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetUserInfo(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/NameServer/GetUserInfo',
+            NameServer__pb2.Usu.SerializeToString,
+            NameServer__pb2.ChatAddress.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

@@ -15,8 +15,8 @@ class ChatServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.ConnectChat = channel.unary_stream(
-                '/ChatService/ConnectChat',
+        self.ConnectGChat = channel.unary_stream(
+                '/ChatService/ConnectGChat',
                 request_serializer=Client__pb2.ChatId.SerializeToString,
                 response_deserializer=Client__pb2.Message.FromString,
                 )
@@ -35,10 +35,10 @@ class ChatServiceStub(object):
                 request_serializer=Client__pb2.User.SerializeToString,
                 response_deserializer=Client__pb2.Empty.FromString,
                 )
-        self.StartPrivateChat = channel.unary_stream(
+        self.StartPrivateChat = channel.unary_unary(
                 '/ChatService/StartPrivateChat',
                 request_serializer=Client__pb2.User.SerializeToString,
-                response_deserializer=Client__pb2.Message.FromString,
+                response_deserializer=Client__pb2.Empty.FromString,
                 )
 
 
@@ -46,8 +46,8 @@ class ChatServiceServicer(object):
     """Service for managing chat connections and messages
     """
 
-    def ConnectChat(self, request, context):
-        """Connects to an existing chat (private or group)
+    def ConnectGChat(self, request, context):
+        """Connects to an existing chat (group)
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -85,8 +85,8 @@ class ChatServiceServicer(object):
 
 def add_ChatServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'ConnectChat': grpc.unary_stream_rpc_method_handler(
-                    servicer.ConnectChat,
+            'ConnectGChat': grpc.unary_stream_rpc_method_handler(
+                    servicer.ConnectGChat,
                     request_deserializer=Client__pb2.ChatId.FromString,
                     response_serializer=Client__pb2.Message.SerializeToString,
             ),
@@ -105,10 +105,10 @@ def add_ChatServiceServicer_to_server(servicer, server):
                     request_deserializer=Client__pb2.User.FromString,
                     response_serializer=Client__pb2.Empty.SerializeToString,
             ),
-            'StartPrivateChat': grpc.unary_stream_rpc_method_handler(
+            'StartPrivateChat': grpc.unary_unary_rpc_method_handler(
                     servicer.StartPrivateChat,
                     request_deserializer=Client__pb2.User.FromString,
-                    response_serializer=Client__pb2.Message.SerializeToString,
+                    response_serializer=Client__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -122,7 +122,7 @@ class ChatService(object):
     """
 
     @staticmethod
-    def ConnectChat(request,
+    def ConnectGChat(request,
             target,
             options=(),
             channel_credentials=None,
@@ -132,7 +132,7 @@ class ChatService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/ChatService/ConnectChat',
+        return grpc.experimental.unary_stream(request, target, '/ChatService/ConnectGChat',
             Client__pb2.ChatId.SerializeToString,
             Client__pb2.Message.FromString,
             options, channel_credentials,
@@ -200,279 +200,8 @@ class ChatService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/ChatService/StartPrivateChat',
+        return grpc.experimental.unary_unary(request, target, '/ChatService/StartPrivateChat',
             Client__pb2.User.SerializeToString,
-            Client__pb2.Message.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-
-class ClientUIServiceStub(object):
-    """Client UI service
-    """
-
-    def __init__(self, channel):
-        """Constructor.
-
-        Args:
-            channel: A grpc.Channel.
-        """
-        self.GetUsername = channel.unary_unary(
-                '/ClientUIService/GetUsername',
-                request_serializer=Client__pb2.Empty.SerializeToString,
-                response_deserializer=Client__pb2.User.FromString,
-                )
-        self.ShowMenuOptions = channel.unary_stream(
-                '/ClientUIService/ShowMenuOptions',
-                request_serializer=Client__pb2.Empty.SerializeToString,
-                response_deserializer=Client__pb2.MenuOption.FromString,
-                )
-        self.ConnectChat = channel.unary_stream(
-                '/ClientUIService/ConnectChat',
-                request_serializer=Client__pb2.ChatId.SerializeToString,
-                response_deserializer=Client__pb2.Message.FromString,
-                )
-        self.SubscribeToGroupChat = channel.unary_stream(
-                '/ClientUIService/SubscribeToGroupChat',
-                request_serializer=Client__pb2.ChatId.SerializeToString,
-                response_deserializer=Client__pb2.Message.FromString,
-                )
-        self.DiscoverChats = channel.unary_stream(
-                '/ClientUIService/DiscoverChats',
-                request_serializer=Client__pb2.Empty.SerializeToString,
-                response_deserializer=Client__pb2.ChatId.FromString,
-                )
-        self.AccessInsultChannel = channel.unary_stream(
-                '/ClientUIService/AccessInsultChannel',
-                request_serializer=Client__pb2.User.SerializeToString,
-                response_deserializer=Client__pb2.Message.FromString,
-                )
-        self.StartPrivateChat = channel.unary_stream(
-                '/ClientUIService/StartPrivateChat',
-                request_serializer=Client__pb2.User.SerializeToString,
-                response_deserializer=Client__pb2.Message.FromString,
-                )
-
-
-class ClientUIServiceServicer(object):
-    """Client UI service
-    """
-
-    def GetUsername(self, request, context):
-        """Asks for the client's username
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def ShowMenuOptions(self, request, context):
-        """Shows menu options and handles client requests
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def ConnectChat(self, request, context):
-        """Connects to a chat (either private or group chat) by specifying its id
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def SubscribeToGroupChat(self, request, context):
-        """Starts listening to the messages of a group chat by specifying its id
-        If the group chat in non-existent, the server must create it from scratch
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def DiscoverChats(self, request, context):
-        """Asks the server for a list of chats active at the time of the request
-        Active chats are all group chats and private chats of currently connected clients
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def AccessInsultChannel(self, request, context):
-        """Sends an insult message to a (undefined) client
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def StartPrivateChat(self, request, context):
-        """Establishes a private chat with another client
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-
-def add_ClientUIServiceServicer_to_server(servicer, server):
-    rpc_method_handlers = {
-            'GetUsername': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetUsername,
-                    request_deserializer=Client__pb2.Empty.FromString,
-                    response_serializer=Client__pb2.User.SerializeToString,
-            ),
-            'ShowMenuOptions': grpc.unary_stream_rpc_method_handler(
-                    servicer.ShowMenuOptions,
-                    request_deserializer=Client__pb2.Empty.FromString,
-                    response_serializer=Client__pb2.MenuOption.SerializeToString,
-            ),
-            'ConnectChat': grpc.unary_stream_rpc_method_handler(
-                    servicer.ConnectChat,
-                    request_deserializer=Client__pb2.ChatId.FromString,
-                    response_serializer=Client__pb2.Message.SerializeToString,
-            ),
-            'SubscribeToGroupChat': grpc.unary_stream_rpc_method_handler(
-                    servicer.SubscribeToGroupChat,
-                    request_deserializer=Client__pb2.ChatId.FromString,
-                    response_serializer=Client__pb2.Message.SerializeToString,
-            ),
-            'DiscoverChats': grpc.unary_stream_rpc_method_handler(
-                    servicer.DiscoverChats,
-                    request_deserializer=Client__pb2.Empty.FromString,
-                    response_serializer=Client__pb2.ChatId.SerializeToString,
-            ),
-            'AccessInsultChannel': grpc.unary_stream_rpc_method_handler(
-                    servicer.AccessInsultChannel,
-                    request_deserializer=Client__pb2.User.FromString,
-                    response_serializer=Client__pb2.Message.SerializeToString,
-            ),
-            'StartPrivateChat': grpc.unary_stream_rpc_method_handler(
-                    servicer.StartPrivateChat,
-                    request_deserializer=Client__pb2.User.FromString,
-                    response_serializer=Client__pb2.Message.SerializeToString,
-            ),
-    }
-    generic_handler = grpc.method_handlers_generic_handler(
-            'ClientUIService', rpc_method_handlers)
-    server.add_generic_rpc_handlers((generic_handler,))
-
-
- # This class is part of an EXPERIMENTAL API.
-class ClientUIService(object):
-    """Client UI service
-    """
-
-    @staticmethod
-    def GetUsername(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/ClientUIService/GetUsername',
-            Client__pb2.Empty.SerializeToString,
-            Client__pb2.User.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def ShowMenuOptions(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/ClientUIService/ShowMenuOptions',
-            Client__pb2.Empty.SerializeToString,
-            Client__pb2.MenuOption.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def ConnectChat(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/ClientUIService/ConnectChat',
-            Client__pb2.ChatId.SerializeToString,
-            Client__pb2.Message.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def SubscribeToGroupChat(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/ClientUIService/SubscribeToGroupChat',
-            Client__pb2.ChatId.SerializeToString,
-            Client__pb2.Message.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def DiscoverChats(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/ClientUIService/DiscoverChats',
-            Client__pb2.Empty.SerializeToString,
-            Client__pb2.ChatId.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def AccessInsultChannel(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/ClientUIService/AccessInsultChannel',
-            Client__pb2.User.SerializeToString,
-            Client__pb2.Message.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def StartPrivateChat(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/ClientUIService/StartPrivateChat',
-            Client__pb2.User.SerializeToString,
-            Client__pb2.Message.FromString,
+            Client__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

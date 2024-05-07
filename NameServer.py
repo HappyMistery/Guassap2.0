@@ -4,12 +4,12 @@ from concurrent import futures
 
 import NameServer_pb2_grpc
 import NameServer_pb2
-from RegistrationService import registration_service
+from RedisService import registration_service
 
 def start():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     NameServer_pb2_grpc.add_NameServerServicer_to_server(NameServerServicer(), server)
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port('localhost:50051')
     server.start()
     print("The Name Server is waiting for registrations")
     try:
@@ -22,5 +22,9 @@ class NameServerServicer(NameServer_pb2_grpc.NameServerServicer):
     def RegisterUser(self, request, context):
         registration = registration_service.register_user(request)
         response = NameServer_pb2.Response()
-        response.value.extend(registration)
+        response.success = registration.success
         return response
+    
+    def GetUserInfo(self, request, context):
+        u_info = registration_service.get_user_info(request)
+        return u_info

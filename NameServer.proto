@@ -22,6 +22,11 @@ message ChatAddress {
   string address = 1;
 }
 
+// Message representing a user
+message Usu {
+  string username = 1;
+}
+
 message Response {
   bool success = 1;
 }
@@ -30,6 +35,9 @@ message Response {
 service NameServer {
   // Registers the IP address associated with a username
   rpc RegisterUser (UserAddress) returns (Response);
+
+  // Gets the ip:port of a given username
+  rpc GetUserInfo (Usu) returns (ChatAddress);
 
   // Retrieves the address associated with a chat ID
   rpc GetChatAddress (IdChat) returns (ChatAddress);

@@ -14,6 +14,11 @@ def main():
     #python3 -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. --pyi_out=. ./NameServer.proto
     subprocess.check_call(['python3', '-m', 'grpc_tools.protoc', '-I./', '--python_out=.', '--grpc_python_out=.', '--pyi_out=.', './NameServer.proto'])
     
+    try:
+        subprocess.check_call(['wsl', 'redis-server'])
+    except Exception as e:
+        print(e)
+        
     import Client, Server
     
     client_thread = threading.Thread(target=Client.start)

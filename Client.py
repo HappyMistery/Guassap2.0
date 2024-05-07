@@ -1,4 +1,4 @@
-import grpc, grpc_tools
+import grpc
 import tkinter as tk
 
 import Client_pb2
@@ -6,6 +6,7 @@ import Client_pb2_grpc
 import NameServer_pb2
 import NameServer_pb2_grpc
 
+from ClientPrivatChat import private_chat
 
 #Logo position and size
 def add_header(window):
@@ -44,20 +45,23 @@ def connect_Chat():
 def connect_private_chat():
     for button in chat_buttons:
         button.pack_forget()
-    chat_ID_label = tk.Label(chat_frame, text="Enter private chat ID:", bg="#333", fg="white", font=("Verdana", 15))
-    chat_ID_label.grid(row=0, column=0, padx=10, pady=10)
-    global chat_id
-    chat_id = tk.Entry(chat_frame)
-    chat_id.grid(row=1, column=0, padx=10)
+    user_ID_label = tk.Label(chat_frame, text="Enter private chat ID:", bg="#333", fg="white", font=("Verdana", 15))
+    user_ID_label.grid(row=0, column=0, padx=10, pady=10)
+    global user_id
+    user_id = tk.Entry(chat_frame)
+    user_id.grid(row=1, column=0, padx=10)
     chat_button = tk.Button(chat_frame, text="Connect", command=start_grpc_client, bg="#555")
     chat_button.grid(row=2, column=0, padx=10, pady=15)
     chat_frame.pack(padx=10, pady=10)
     
 def start_grpc_client():
     with grpc.insecure_channel('localhost:50051') as channel:
-        # Crear un stub para el servicio ChatService
-        stub = Client_pb2_grpc.ChatServiceStub(channel)
-        request = Client_pb2.ChatId(chat_id)
+        stub = NameServer_pb2_grpc.NameServerStub(channel)
+        target = NameServer_pb2.Usu(username=user_id.get())
+        response = stub.GetUserInfo(target)
+        channel.close()
+        print(response.address)
+
         
 def connect_group_chat():
     print("connect_group_chat()")
@@ -74,6 +78,17 @@ def access_insult_channel():
     hide_options()
     print("access_insult_channel()")
 
+
+
+class ChatServiceServicer(Client_pb2_grpc.ChatServiceServicer):
+    def StartPrivateChat(self, request, context):
+        user_info = private_chat.connect_pc(request)
+        print(user_info)
+
+
+
+
+
 def start():
     #Create the window
     global window
@@ -86,6 +101,7 @@ def start():
     
     def set_username_and_close():
         global username
+        global user
         username = username_entry.get()
         
         with grpc.insecure_channel('localhost:50051') as channel:
@@ -93,7 +109,7 @@ def start():
             user = NameServer_pb2.UserAddress(username=username, ip_address='localhost')
             response =  stub.RegisterUser(user)
             channel.close()
-        if response:
+        if response.success:
             print("Usuari Registrat")
         else:
             print("Usuari Identificat")
