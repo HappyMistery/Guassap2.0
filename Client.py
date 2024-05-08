@@ -1,3 +1,4 @@
+from concurrent import futures
 import grpc
 import tkinter as tk
 
@@ -12,6 +13,7 @@ from ClientPrivatChat import private_chat
 def add_header(w):
     global logo
     global header_frame
+    global logo_label
     header_frame = tk.Frame(w, bg="#222", width=w.winfo_width())
     header_frame.pack(fill=tk.X, padx=10, pady=10, anchor="nw")
     logo_label = tk.Label(header_frame, image=logo, bg="#222", padx=10, pady=10)
@@ -45,12 +47,12 @@ def create_chat_window():
     global chat_window
     chat_window = tk.Toplevel(window)
     chat_window.title(f'Guassap2.0 - Chat with {user_id.get()}')
-    chat_window.geometry("750x500+320+140")  # Width x height + X offset + Y offset
+    chat_window.geometry("570x750+350+20")  # Width x height + X offset + Y offset
     chat_window.configure(bg="#333")
     add_header(chat_window)
     global usr_label
-    usr_label = tk.Label(header_frame, text=username, bg="#222", fg="white", font=("Verdana", 15))
-    usr_label.pack(anchor="ne", padx=10, pady=30)
+    usr_label = tk.Label(header_frame, text=user_id.get(), bg="#222", fg="white", font=("Verdana", 15))
+    usr_label.pack(anchor="n", pady=33)
     
     # Function to display chat messages
     def display_message(message, is_user=False):
@@ -67,22 +69,24 @@ def create_chat_window():
             # Replace this with your logic to send message to recipient (e.g., using sockets)
 
     # Create chat history Text widget
-    global chat_history
-    chat_history = tk.Text(chat_window, width=80, height=20, font=("Verdana", 12), bg="#eee")
-    chat_history.pack(padx=10, pady=10)
+    #global chat_history
+    #chat_history = tk.Text(chat_window, width=80, height=20, font=("Verdana", 12), bg="#eee")
+    #chat_history.pack(padx=10, pady=10)
 
     # Add scrollbar
-    scrollbar = tk.Scrollbar(chat_window, orient=tk.VERTICAL, command=chat_history.yview)
-    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    chat_history.config(yscrollcommand=scrollbar.set)
+    #scrollbar = tk.Scrollbar(chat_window, orient=tk.VERTICAL, command=chat_history.yview)
+    #scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    #chat_history.config(yscrollcommand=scrollbar.set)
+
+    bottom_frame = tk.Frame(chat_window, bg="#444")
+    bottom_frame.pack(side=tk.BOTTOM, fill=tk.X)
 
     # Message entry field
-    message_entry = tk.Entry(chat_window, width=80, font=("Verdana", 12))
-    message_entry.pack(padx=10, pady=5)
-
-    # Send button
-    send_button = tk.Button(chat_window, text="Send", font=("Verdana", 12), command=send_message)
-    send_button.pack(pady=5)
+    message_entry = tk.Entry(bottom_frame, bg="#777" ,font=("Verdana", 14))
+    message_entry.pack(padx=20, pady=10, side=tk.LEFT, fill=tk.X, expand=True)
+    
+    send_button = tk.Button(bottom_frame, text="Send", font=("Verdana", 14), command=send_message, bg="#8FEAE7", activebackground="#3C8CAE")
+    send_button.pack(padx=10, pady=10, side=tk.RIGHT)
 
     
 def connect_Chat():
@@ -99,16 +103,20 @@ def connect_private_chat():
     global user_id
     user_id = tk.Entry(chat_frame)
     user_id.grid(row=1, column=0, padx=10)
-    chat_button = tk.Button(chat_frame, text="Connect", command=start_grpc_client, bg="#555")
+    chat_button = tk.Button(chat_frame, text="Connect", command=start_grpc_client, bg="#555", activebackground="#575")
     chat_button.grid(row=2, column=0, padx=10, pady=15)
     chat_frame.pack(padx=10, pady=10)
     
     
 def start_grpc_client():
+    global user_port
     with grpc.insecure_channel('localhost:50051') as channel:
         stub = NameServer_pb2_grpc.NameServerStub(channel)
         target = NameServer_pb2.UserAddress(username=user_id.get(), ip_address='localhost')
         response = stub.GetUserInfo(target)
+        myself = NameServer_pb2.UserAddress(username=username, ip_address='localhost')
+        response = stub.GetUserInfo(myself)
+        user_port=response.address.split(":")[1]
         channel.close()
         if(response.address == 'None'):
             no_user_lbl = tk.Label(window, text=f'User {user_id.get()} does not exist', bg="#333", fg="white", font=("Verdana", 15))
@@ -119,8 +127,14 @@ def start_grpc_client():
     
     create_chat_window()
     
+    cli_server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
+    Client_pb2_grpc.add_ChatServiceServicer_to_server(ChatServiceServicer(), cli_server)
+    cli_server.add_insecure_port(f'localhost:{user_port}')
+    cli_server.start()
+    
     with grpc.insecure_channel(f'localhost:{response.address}') as channel:
         stub = Client_pb2_grpc.ChatServiceStub(channel)
+        
 
         
 def connect_group_chat():
@@ -193,7 +207,7 @@ def start():
     username_label.grid(row=0, column=0, padx=10, pady=10)
     username_entry = tk.Entry(frame)
     username_entry.grid(row=1, column=0, padx=10)
-    username_button = tk.Button(frame, text="Login/Register", command=set_username_and_close, bg="#555")
+    username_button = tk.Button(frame, text="Login/Register", command=set_username_and_close, bg="#555", activebackground="#575")
     username_button.grid(row=2, column=0, padx=10, pady=15)
     
     global option_buttons
