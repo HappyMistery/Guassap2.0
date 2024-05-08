@@ -9,15 +9,19 @@ import NameServer_pb2_grpc
 from ClientPrivatChat import private_chat
 
 #Logo position and size
-def add_header(window):
+def add_header(w):
     global logo
-    logo = tk.PhotoImage(file="Guassap2.0.png")
-    logo = logo.subsample(8)
     global header_frame
-    header_frame = tk.Frame(window, bg="#222", width=window.winfo_width())
+    header_frame = tk.Frame(w, bg="#222", width=w.winfo_width())
     header_frame.pack(fill=tk.X, padx=10, pady=10, anchor="nw")
-    logo_label = tk.Label(header_frame if header_frame else window, image=logo, bg="#222", padx=10, pady=10)
+    logo_label = tk.Label(header_frame, image=logo, bg="#222", padx=10, pady=10)
     logo_label.pack(side=tk.LEFT, anchor="nw")
+
+def switch_user():
+    frame.pack(pady=10, anchor="n")
+    hide_options()
+    back_button.pack_forget()
+    usr_label.pack_forget()
 
 #Make the Option buttons visible
 def show_options():
@@ -25,6 +29,7 @@ def show_options():
         button.pack(pady=10)
     for button in chat_buttons:
         button.pack_forget()
+    switch_user_button.pack(side="bottom", padx=10, pady=10)
     back_button.pack_forget()
     chat_frame.pack_forget()
 
@@ -32,8 +37,52 @@ def show_options():
 def hide_options():
     for button in option_buttons:
         button.pack_forget()    
+    switch_user_button.pack_forget()
     back_button.pack(side="bottom", padx=10, pady=10)  # Mostrar el botón "Tirar hacia atrás"
 
+
+def create_chat_window():
+    global chat_window
+    chat_window = tk.Toplevel(window)
+    chat_window.title(f'Guassap2.0 - Chat with {user_id.get()}')
+    chat_window.geometry("750x500+320+140")  # Width x height + X offset + Y offset
+    chat_window.configure(bg="#333")
+    add_header(chat_window)
+    global usr_label
+    usr_label = tk.Label(header_frame, text=username, bg="#222", fg="white", font=("Verdana", 15))
+    usr_label.pack(anchor="ne", padx=10, pady=30)
+    
+    # Function to display chat messages
+    def display_message(message, is_user=False):
+        msg_color = "black" if is_user else "white"
+        chat_history.insert(tk.END, f"{message}\n" , foreground=msg_color)
+        chat_history.see(tk.END)  # Scroll to the bottom
+
+        # Function to send message (replace with your logic to send message)
+    def send_message():
+        message = message_entry.get()
+        if message:
+            display_message(message, True)  # Display user's message
+            message_entry.delete(0, tk.END)  # Clear message entry
+            # Replace this with your logic to send message to recipient (e.g., using sockets)
+
+    # Create chat history Text widget
+    global chat_history
+    chat_history = tk.Text(chat_window, width=80, height=20, font=("Verdana", 12), bg="#eee")
+    chat_history.pack(padx=10, pady=10)
+
+    # Add scrollbar
+    scrollbar = tk.Scrollbar(chat_window, orient=tk.VERTICAL, command=chat_history.yview)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    chat_history.config(yscrollcommand=scrollbar.set)
+
+    # Message entry field
+    message_entry = tk.Entry(chat_window, width=80, font=("Verdana", 12))
+    message_entry.pack(padx=10, pady=5)
+
+    # Send button
+    send_button = tk.Button(chat_window, text="Send", font=("Verdana", 12), command=send_message)
+    send_button.pack(pady=5)
 
     
 def connect_Chat():
@@ -45,7 +94,7 @@ def connect_Chat():
 def connect_private_chat():
     for button in chat_buttons:
         button.pack_forget()
-    user_ID_label = tk.Label(chat_frame, text="Enter private chat ID:", bg="#333", fg="white", font=("Verdana", 15))
+    user_ID_label = tk.Label(chat_frame, text="With who do you want to chat today?", bg="#333", fg="white", font=("Verdana", 15))
     user_ID_label.grid(row=0, column=0, padx=10, pady=10)
     global user_id
     user_id = tk.Entry(chat_frame)
@@ -54,13 +103,24 @@ def connect_private_chat():
     chat_button.grid(row=2, column=0, padx=10, pady=15)
     chat_frame.pack(padx=10, pady=10)
     
+    
 def start_grpc_client():
     with grpc.insecure_channel('localhost:50051') as channel:
         stub = NameServer_pb2_grpc.NameServerStub(channel)
-        target = NameServer_pb2.Usu(username=user_id.get())
+        target = NameServer_pb2.UserAddress(username=user_id.get(), ip_address='localhost')
         response = stub.GetUserInfo(target)
         channel.close()
-        print(response.address)
+        if(response.address == 'None'):
+            no_user_lbl = tk.Label(window, text=f'User {user_id.get()} does not exist', bg="#333", fg="white", font=("Verdana", 15))
+            no_user_lbl.pack(pady=10, padx=10)
+            no_user_lbl.after(1500, no_user_lbl.destroy)
+            return
+        print(f'Connecting with {user_id.get()} with address {response.address}')
+    
+    create_chat_window()
+    
+    with grpc.insecure_channel(f'localhost:{response.address}') as channel:
+        stub = Client_pb2_grpc.ChatServiceStub(channel)
 
         
 def connect_group_chat():
@@ -97,7 +157,12 @@ def start():
     window.geometry("750x500+300+100")  # Width x height + X offset + Y offset
     window.configure(bg="#333")
     
+    global logo
+    logo = tk.PhotoImage(file="./Guassap2.0.png")
+    logo = logo.subsample(8)
+    
     add_header(window)
+    
     
     def set_username_and_close():
         global username
@@ -114,11 +179,13 @@ def start():
         else:
             print("Usuari Identificat")
         
+        global usr_label
         usr_label = tk.Label(header_frame, text=username, bg="#222", fg="white", font=("Verdana", 15))
         usr_label.pack(anchor="ne", padx=10, pady=30)
-        frame.destroy()
+        frame.pack_forget()
         show_options()
     
+    global frame
     frame = tk.Frame(window, bg="#333")
     frame.pack(pady=10, anchor="n")
     
@@ -152,6 +219,10 @@ def start():
     
     global back_button 
     back_button = tk.Button(window, text="Back to Menu", command=show_options,
+                            font=("Arial", 12), width=15, padx=10, pady=10, bg="#777", activebackground="#575")
+    
+    global switch_user_button 
+    switch_user_button = tk.Button(window, text="Switch User", command=switch_user,
                             font=("Arial", 12), width=15, padx=10, pady=10, bg="#777", activebackground="#575")
 
     window.mainloop()

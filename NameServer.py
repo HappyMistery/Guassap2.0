@@ -27,4 +27,9 @@ class NameServerServicer(NameServer_pb2_grpc.NameServerServicer):
     
     def GetUserInfo(self, request, context):
         u_info = registration_service.get_user_info(request)
-        return u_info
+        response = NameServer_pb2.ChatAddress()
+        if(u_info is None):
+            response.address = 'None'
+        else:
+            response.address = u_info
+        return response

@@ -22,7 +22,7 @@ class NameServerStub(object):
                 )
         self.GetUserInfo = channel.unary_unary(
                 '/NameServer/GetUserInfo',
-                request_serializer=NameServer__pb2.Usu.SerializeToString,
+                request_serializer=NameServer__pb2.UserAddress.SerializeToString,
                 response_deserializer=NameServer__pb2.ChatAddress.FromString,
                 )
         self.GetChatAddress = channel.unary_unary(
@@ -67,7 +67,7 @@ def add_NameServerServicer_to_server(servicer, server):
             ),
             'GetUserInfo': grpc.unary_unary_rpc_method_handler(
                     servicer.GetUserInfo,
-                    request_deserializer=NameServer__pb2.Usu.FromString,
+                    request_deserializer=NameServer__pb2.UserAddress.FromString,
                     response_serializer=NameServer__pb2.ChatAddress.SerializeToString,
             ),
             'GetChatAddress': grpc.unary_unary_rpc_method_handler(
@@ -115,7 +115,7 @@ class NameServer(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/NameServer/GetUserInfo',
-            NameServer__pb2.Usu.SerializeToString,
+            NameServer__pb2.UserAddress.SerializeToString,
             NameServer__pb2.ChatAddress.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

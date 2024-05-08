@@ -11,11 +11,12 @@ class RedisService:
     def register_user(self, request):
         ip_port = f"{request.ip_address}:{r.get('user_port')}"
         print(request.username)
-        print(ip_port)
         if r.exists(request.username):
+            print(r.get(request.username))
             return NameServer_pb2.Response(success=False)
     
         r.set(request.username, ip_port)
+        print(ip_port)
         r.set('user_port', int(r.get('user_port'))+1)
         return NameServer_pb2.Response(success=True)
     

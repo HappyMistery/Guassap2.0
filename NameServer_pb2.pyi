@@ -32,12 +32,6 @@ class ChatAddress(_message.Message):
     address: str
     def __init__(self, address: _Optional[str] = ...) -> None: ...
 
-class Usu(_message.Message):
-    __slots__ = ("username",)
-    USERNAME_FIELD_NUMBER: _ClassVar[int]
-    username: str
-    def __init__(self, username: _Optional[str] = ...) -> None: ...
-
 class Response(_message.Message):
     __slots__ = ("success",)
     SUCCESS_FIELD_NUMBER: _ClassVar[int]

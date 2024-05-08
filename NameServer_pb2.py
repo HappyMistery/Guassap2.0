@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10NameServer.proto\"\x14\n\x06IdChat\x12\n\n\x02id\x18\x01 \x01(\t\"1\n\x12\x43hatNamespaceEntry\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x01(\t\"3\n\x0bUserAddress\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x12\n\nip_address\x18\x02 \x01(\t\"\x1e\n\x0b\x43hatAddress\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\"\x17\n\x03Usu\x12\x10\n\x08username\x18\x01 \x01(\t\"\x1b\n\x08Response\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x81\x01\n\nNameServer\x12\'\n\x0cRegisterUser\x12\x0c.UserAddress\x1a\t.Response\x12!\n\x0bGetUserInfo\x12\x04.Usu\x1a\x0c.ChatAddress\x12\'\n\x0eGetChatAddress\x12\x07.IdChat\x1a\x0c.ChatAddressb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10NameServer.proto\"\x14\n\x06IdChat\x12\n\n\x02id\x18\x01 \x01(\t\"1\n\x12\x43hatNamespaceEntry\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x01(\t\"3\n\x0bUserAddress\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x12\n\nip_address\x18\x02 \x01(\t\"\x1e\n\x0b\x43hatAddress\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\"\x1b\n\x08Response\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x8b\x01\n\nNameServer\x12\'\n\x0cRegisterUser\x12\x0c.UserAddress\x1a\t.Response\x12+\n\x0bGetUserInfo\x12\x0c.UserAddress\x1a\x0c.ChatAddress\"\x00\x12\'\n\x0eGetChatAddress\x12\x07.IdChat\x1a\x0c.ChatAddressb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -29,10 +29,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_USERADDRESS']._serialized_end=144
   _globals['_CHATADDRESS']._serialized_start=146
   _globals['_CHATADDRESS']._serialized_end=176
-  _globals['_USU']._serialized_start=178
-  _globals['_USU']._serialized_end=201
-  _globals['_RESPONSE']._serialized_start=203
-  _globals['_RESPONSE']._serialized_end=230
-  _globals['_NAMESERVER']._serialized_start=233
-  _globals['_NAMESERVER']._serialized_end=362
+  _globals['_RESPONSE']._serialized_start=178
+  _globals['_RESPONSE']._serialized_end=205
+  _globals['_NAMESERVER']._serialized_start=208
+  _globals['_NAMESERVER']._serialized_end=347
 # @@protoc_insertion_point(module_scope)
