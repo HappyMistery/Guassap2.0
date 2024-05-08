@@ -82,6 +82,7 @@ def create_chat_window():
     bottom_frame.pack(side=tk.BOTTOM, fill=tk.X)
 
     # Message entry field
+    global message_entry
     message_entry = tk.Entry(bottom_frame, bg="#777" ,font=("Verdana", 14))
     message_entry.pack(padx=20, pady=10, side=tk.LEFT, fill=tk.X, expand=True)
     
@@ -96,6 +97,12 @@ def connect_Chat():
     
     
 def connect_private_chat():
+    global user_port
+    cli_server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
+    Client_pb2_grpc.add_ChatServiceServicer_to_server(ChatServiceServicer(), cli_server)
+    cli_server.add_insecure_port(f'localhost:{user_port}')
+    cli_server.start()
+    
     for button in chat_buttons:
         button.pack_forget()
     user_ID_label = tk.Label(chat_frame, text="With who do you want to chat today?", bg="#333", fg="white", font=("Verdana", 15))
@@ -109,14 +116,10 @@ def connect_private_chat():
     
     
 def start_grpc_client():
-    global user_port
     with grpc.insecure_channel('localhost:50051') as channel:
         stub = NameServer_pb2_grpc.NameServerStub(channel)
         target = NameServer_pb2.UserAddress(username=user_id.get(), ip_address='localhost')
         response = stub.GetUserInfo(target)
-        myself = NameServer_pb2.UserAddress(username=username, ip_address='localhost')
-        response = stub.GetUserInfo(myself)
-        user_port=response.address.split(":")[1]
         channel.close()
         if(response.address == 'None'):
             no_user_lbl = tk.Label(window, text=f'User {user_id.get()} does not exist', bg="#333", fg="white", font=("Verdana", 15))
@@ -127,14 +130,10 @@ def start_grpc_client():
     
     create_chat_window()
     
-    cli_server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
-    Client_pb2_grpc.add_ChatServiceServicer_to_server(ChatServiceServicer(), cli_server)
-    cli_server.add_insecure_port(f'localhost:{user_port}')
-    cli_server.start()
-    
-    with grpc.insecure_channel(f'localhost:{response.address}') as channel:
+    with grpc.insecure_channel(response.address) as channel:
         stub = Client_pb2_grpc.ChatServiceStub(channel)
-        
+        message = Client_pb2.Message(content=message_entry.get())
+        stub.SendPrivateMessage(message)
 
         
 def connect_group_chat():
@@ -155,9 +154,8 @@ def access_insult_channel():
 
 
 class ChatServiceServicer(Client_pb2_grpc.ChatServiceServicer):
-    def StartPrivateChat(self, request, context):
-        user_info = private_chat.connect_pc(request)
-        print(user_info)
+    def SendPrivateMessage(self, request, context):
+        private_chat.send_message(request)
 
 
 
@@ -181,12 +179,16 @@ def start():
     def set_username_and_close():
         global username
         global user
+        global user_port
         username = username_entry.get()
         
         with grpc.insecure_channel('localhost:50051') as channel:
             stub = NameServer_pb2_grpc.NameServerStub(channel)
             user = NameServer_pb2.UserAddress(username=username, ip_address='localhost')
             response =  stub.RegisterUser(user)
+            myself = NameServer_pb2.UserAddress(username=username, ip_address='localhost')
+            my_info = stub.GetUserInfo(myself)
+            user_port=my_info.address.split(":")[1]
             channel.close()
         if response.success:
             print("Usuari Registrat")

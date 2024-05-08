@@ -35,8 +35,8 @@ class ChatServiceStub(object):
                 request_serializer=Client__pb2.User.SerializeToString,
                 response_deserializer=Client__pb2.Empty.FromString,
                 )
-        self.StartPrivateChat = channel.unary_unary(
-                '/ChatService/StartPrivateChat',
+        self.SendPrivateMessage = channel.unary_unary(
+                '/ChatService/SendPrivateMessage',
                 request_serializer=Client__pb2.User.SerializeToString,
                 response_deserializer=Client__pb2.Empty.FromString,
                 )
@@ -75,8 +75,8 @@ class ChatServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def StartPrivateChat(self, request, context):
-        """Establishes a connection between two clients for private chat
+    def SendPrivateMessage(self, request, context):
+        """Sends a message to a given user
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -105,8 +105,8 @@ def add_ChatServiceServicer_to_server(servicer, server):
                     request_deserializer=Client__pb2.User.FromString,
                     response_serializer=Client__pb2.Empty.SerializeToString,
             ),
-            'StartPrivateChat': grpc.unary_unary_rpc_method_handler(
-                    servicer.StartPrivateChat,
+            'SendPrivateMessage': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendPrivateMessage,
                     request_deserializer=Client__pb2.User.FromString,
                     response_serializer=Client__pb2.Empty.SerializeToString,
             ),
@@ -190,7 +190,7 @@ class ChatService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def StartPrivateChat(request,
+    def SendPrivateMessage(request,
             target,
             options=(),
             channel_credentials=None,
@@ -200,7 +200,7 @@ class ChatService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/ChatService/StartPrivateChat',
+        return grpc.experimental.unary_unary(request, target, '/ChatService/SendPrivateMessage',
             Client__pb2.User.SerializeToString,
             Client__pb2.Empty.FromString,
             options, channel_credentials,

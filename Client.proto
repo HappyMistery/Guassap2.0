@@ -11,8 +11,6 @@ message User {
 // Message representing a chat message
 message Message {
   string content = 1;
-  User sender = 2;
-  int64 timestamp = 3; // Unix timestamp in milliseconds
 }
 
 // Message representing a chat identifier
@@ -35,6 +33,6 @@ service ChatService {
   // Sends an insult message to another client (undefined behavior)
   rpc SendInsult (User) returns (Empty);
 
-  // Establishes a connection between two clients for private chat
-  rpc StartPrivateChat (User) returns (Empty);
+  // Sends a message to a given user
+  rpc SendPrivateMessage (User) returns (Empty);
 }

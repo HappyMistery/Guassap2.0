@@ -1,6 +1,6 @@
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Optional, Union as _Union
+from typing import ClassVar as _ClassVar, Optional as _Optional
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -15,14 +15,10 @@ class User(_message.Message):
     def __init__(self, username: _Optional[str] = ...) -> None: ...
 
 class Message(_message.Message):
-    __slots__ = ("content", "sender", "timestamp")
+    __slots__ = ("content",)
     CONTENT_FIELD_NUMBER: _ClassVar[int]
-    SENDER_FIELD_NUMBER: _ClassVar[int]
-    TIMESTAMP_FIELD_NUMBER: _ClassVar[int]
     content: str
-    sender: User
-    timestamp: int
-    def __init__(self, content: _Optional[str] = ..., sender: _Optional[_Union[User, _Mapping]] = ..., timestamp: _Optional[int] = ...) -> None: ...
+    def __init__(self, content: _Optional[str] = ...) -> None: ...
 
 class ChatId(_message.Message):
     __slots__ = ("id",)
