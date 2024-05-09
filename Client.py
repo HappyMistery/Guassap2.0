@@ -55,28 +55,40 @@ def create_chat_window():
     usr_label.pack(anchor="n", pady=33)
     
     # Function to display chat messages
-    def display_message(message, is_user=False):
-        msg_color = "black" if is_user else "white"
-        chat_history.insert(tk.END, f"{message}\n" , foreground=msg_color)
-        chat_history.see(tk.END)  # Scroll to the bottom
+    def display_message(message, is_user):
+        msg_color = "#777" if is_user else "#555"
+        text_color = "white" if msg_color == "#555" else "black"
+        estimated_width = len(message) + 2
+        estimated_height = int((len(message) // (chat_window.winfo_width() / 13)) % (chat_window.winfo_width() / 13)) + 1
+        side = 'e' if is_user else 'w'
+        new_message = tk.Text(message_container, width=estimated_width, height=estimated_height, wrap=tk.WORD, bg=msg_color, fg=text_color, font=("Verdana", 13))
+        new_message.insert(tk.INSERT, message)
+        new_message.config(state=tk.DISABLED)
+        new_message.pack(anchor=side, padx=5, pady=2)
+        message_container.yview(tk.END)
+        
 
-        # Function to send message (replace with your logic to send message)
+    # Function to send message
     def send_message():
         message = message_entry.get()
         if message:
-            display_message(message, True)  # Display user's message
-            message_entry.delete(0, tk.END)  # Clear message entry
-            # Replace this with your logic to send message to recipient (e.g., using sockets)
+            display_message(message, True)
+            message_entry.delete(0, tk.END)
+            with grpc.insecure_channel(response.address) as channel:
+                stub = Client_pb2_grpc.ChatServiceStub(channel)
+                message = Client_pb2.Message(content=message)
+                stub.SendPrivateMessage(message)
 
     # Create chat history Text widget
-    #global chat_history
-    #chat_history = tk.Text(chat_window, width=80, height=20, font=("Verdana", 12), bg="#eee")
-    #chat_history.pack(padx=10, pady=10)
+    global message_container
+    chat_history = tk.Frame(chat_window, bg="#333")
+    chat_history.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
-    # Add scrollbar
-    #scrollbar = tk.Scrollbar(chat_window, orient=tk.VERTICAL, command=chat_history.yview)
-    #scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    #chat_history.config(yscrollcommand=scrollbar.set)
+    message_container = tk.Canvas(chat_history, bg="#333")
+    message_container.pack(fill=tk.BOTH, expand=True)
+
+    scrollbar = tk.Scrollbar(message_container, orient=tk.VERTICAL, command=message_container.yview)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
     bottom_frame = tk.Frame(chat_window, bg="#444")
     bottom_frame.pack(side=tk.BOTTOM, fill=tk.X)
@@ -98,6 +110,7 @@ def connect_Chat():
     
 def connect_private_chat():
     global user_port
+    global cli_server
     cli_server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
     Client_pb2_grpc.add_ChatServiceServicer_to_server(ChatServiceServicer(), cli_server)
     cli_server.add_insecure_port(f'localhost:{user_port}')
@@ -119,6 +132,7 @@ def start_grpc_client():
     with grpc.insecure_channel('localhost:50051') as channel:
         stub = NameServer_pb2_grpc.NameServerStub(channel)
         target = NameServer_pb2.UserAddress(username=user_id.get(), ip_address='localhost')
+        global response
         response = stub.GetUserInfo(target)
         channel.close()
         if(response.address == 'None'):
@@ -129,11 +143,6 @@ def start_grpc_client():
         print(f'Connecting with {user_id.get()} with address {response.address}')
     
     create_chat_window()
-    
-    with grpc.insecure_channel(response.address) as channel:
-        stub = Client_pb2_grpc.ChatServiceStub(channel)
-        message = Client_pb2.Message(content=message_entry.get())
-        stub.SendPrivateMessage(message)
 
         
 def connect_group_chat():
