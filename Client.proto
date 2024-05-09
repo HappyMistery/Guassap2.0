@@ -1,7 +1,5 @@
 syntax = "proto3";
-
-// Message representing an empty response
-message Empty {}
+import "google/protobuf/empty.proto";
 
 // Message representing a user
 message User {
@@ -28,11 +26,14 @@ service ChatService {
   rpc SubscribeToGroupChat (ChatId) returns (stream Message);
 
   // Requests a list of active chats
-  rpc DiscoverChats (Empty) returns (stream ChatId);
+  rpc DiscoverChats (google.protobuf.Empty) returns (stream ChatId);
 
   // Sends an insult message to another client (undefined behavior)
-  rpc SendInsult (User) returns (Empty);
+  rpc SendInsult (User) returns (google.protobuf.Empty);
 
-  // Sends a message to a given user
-  rpc SendPrivateMessage (User) returns (Empty);
+  // Sends a message to a user
+  rpc SendPrivateMessage (Message) returns (google.protobuf.Empty);
+
+  // Recieves a private message
+  rpc RecievePrivateMessage (google.protobuf.Empty) returns (Message);
 }
