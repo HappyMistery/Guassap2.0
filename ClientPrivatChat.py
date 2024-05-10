@@ -11,7 +11,6 @@ class PrivateChat:
     
     def recieve_message(self):
         messg = Client_pb2.Message(content=self.msg)
-        print(messg)
         return messg
 
 private_chat = PrivateChat()

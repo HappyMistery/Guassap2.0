@@ -1,4 +1,5 @@
 redis
 pika
+rabbitmq
 grpcio
 grpcio_tools

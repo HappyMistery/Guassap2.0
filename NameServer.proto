@@ -36,4 +36,5 @@ service NameServer {
 
   // Retrieves the address associated with a chat ID
   rpc GetChatAddress (IdChat) returns (ChatAddress);
+  
 }

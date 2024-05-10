@@ -1,12 +1,12 @@
 import subprocess
-import Starter
 
 def main():
+    import Starter
     try:
         subprocess.check_call(['pip', 'install', '-r', 'requirements.txt'])
         print("Successfully installed requirements from requirements.txt")
     except subprocess.CalledProcessError as e:
-        print("Error:", e)
+        print("Requirements already installed")
        
     #python3 -m grpc_tools.protoc -I./ --python_out=. --grpc_python_out=. --pyi_out=. ./Client.proto
     subprocess.check_call(['python3', '-m', 'grpc_tools.protoc', '-I./', '--python_out=.', '--grpc_python_out=.', '--pyi_out=.', './Client.proto'])
@@ -19,6 +19,16 @@ def main():
         subprocess.check_call(['wsl', 'redis-server'])
     except Exception as e:
         print("redis server already started")
+        
+    try:
+        subprocess.check_call(['wsl', 'docker', 'pull', 'rabbitmq'])
+    except Exception as e:
+        print("rabbitmq already added")
+        
+    try:
+        subprocess.check_call(['wsl', 'docker', 'run', '-d', '--name', 'rabbitmq', '-p', '5672:5672', '-p', '15672:15672', 'rabbitmq'])
+    except Exception as e:
+        print("rabbitmq already started")
         
     Starter.main()
 main()

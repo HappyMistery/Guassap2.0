@@ -9,7 +9,7 @@ import NameServer_pb2_grpc
 
 from ClientPrivatChat import private_chat
 
-#Logo position and size
+#Header that contains the logo and Username
 def add_header(w):
     global logo
     global header_frame
@@ -19,13 +19,14 @@ def add_header(w):
     logo_label = tk.Label(header_frame, image=logo, bg="#222", padx=10, pady=10)
     logo_label.pack(side=tk.LEFT, anchor="nw")
 
+#Takes the user to the login/register window
 def switch_user():
     frame.pack(pady=10, anchor="n")
     hide_options()
     back_button.pack_forget()
     usr_label.pack_forget()
 
-#Make the Option buttons visible
+#Makes the Option buttons visible
 def show_options():
     global connected
     for button in option_buttons:
@@ -79,7 +80,6 @@ def create_chat_window():
         if message:
             display_message(message, True)
             message_entry.delete(0, tk.END)
-            print(f'I am localhost:{user_port} Sending message to {response.address}')
             with grpc.insecure_channel(response.address) as channel:
                 stub = Client_pb2_grpc.ChatServiceStub(channel)
                 message = Client_pb2.Message(content=message)
@@ -113,14 +113,15 @@ def create_chat_window():
 class ChatServiceServicer(Client_pb2_grpc.ChatServiceServicer):
     def SendPrivateMessage(self, request, context):
         private_chat.send_message(request)
-        response = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
-        return response
+        empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
+        return empty
     
     def RecievePrivateMessage(self, request, context):
         response = Client_pb2.Message()
         response = private_chat.recieve_message()
         display_message(response.content, False)
-        return 'Sent'
+        empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
+        return empty
     
     
     
