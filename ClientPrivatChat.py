@@ -1,11 +1,17 @@
-import redis
 import Client_pb2
 
-r = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
 class PrivateChat:
+    def __init__(self):
+        self.msg = ""
+        self.insults_severity = dict()
+        
     def send_message(self, message):
-        print(message.content)
-        return Client_pb2.Empty()
+        self.msg = message.content
+        return 'Done'
+    
+    def recieve_message(self):
+        messg = Client_pb2.Message(content=self.msg)
+        return messg
 
 private_chat = PrivateChat()

@@ -65,12 +65,13 @@ def create_chat_window():
         new_message.insert(tk.INSERT, message)
         new_message.config(state=tk.DISABLED)
         new_message.pack(anchor=side, padx=5, pady=2)
-        message_container.yview(tk.END)
         
 
     # Function to send message
     def send_message():
         message = message_entry.get()
+        global empty
+        empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
         if message:
             display_message(message, True)
             message_entry.delete(0, tk.END)
@@ -78,6 +79,8 @@ def create_chat_window():
                 stub = Client_pb2_grpc.ChatServiceStub(channel)
                 message = Client_pb2.Message(content=message)
                 stub.SendPrivateMessage(message)
+                msg = stub.RecievePrivateMessage(empty)
+                display_message(msg.content, False)
 
     # Create chat history Text widget
     global message_container
@@ -165,6 +168,13 @@ def access_insult_channel():
 class ChatServiceServicer(Client_pb2_grpc.ChatServiceServicer):
     def SendPrivateMessage(self, request, context):
         private_chat.send_message(request)
+        response = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
+        return response
+    
+    def RecievePrivateMessage(self, request, context):
+        response = Client_pb2.Message()
+        response = private_chat.recieve_message()
+        return response
 
 
 

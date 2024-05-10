@@ -12,23 +12,22 @@ from google.protobuf.internal import builder as _builder
 _sym_db = _symbol_database.Default()
 
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0c\x43lient.proto\"\x07\n\x05\x45mpty\"\x18\n\x04User\x12\x10\n\x08username\x18\x01 \x01(\t\"\x1a\n\x07Message\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\"\x14\n\x06\x43hatId\x12\n\n\x02id\x18\x01 \x01(\t2\xc5\x01\n\x0b\x43hatService\x12#\n\x0c\x43onnectGChat\x12\x07.ChatId\x1a\x08.Message0\x01\x12+\n\x14SubscribeToGroupChat\x12\x07.ChatId\x1a\x08.Message0\x01\x12\"\n\rDiscoverChats\x12\x06.Empty\x1a\x07.ChatId0\x01\x12\x1b\n\nSendInsult\x12\x05.User\x1a\x06.Empty\x12#\n\x12SendPrivateMessage\x12\x05.User\x1a\x06.Emptyb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0c\x43lient.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x18\n\x04User\x12\x10\n\x08username\x18\x01 \x01(\t\"\x1a\n\x07Message\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\"\x14\n\x06\x43hatId\x12\n\n\x02id\x18\x01 \x01(\t2\xb3\x02\n\x0b\x43hatService\x12#\n\x0c\x43onnectGChat\x12\x07.ChatId\x1a\x08.Message0\x01\x12+\n\x14SubscribeToGroupChat\x12\x07.ChatId\x1a\x08.Message0\x01\x12\x32\n\rDiscoverChats\x12\x16.google.protobuf.Empty\x1a\x07.ChatId0\x01\x12+\n\nSendInsult\x12\x05.User\x1a\x16.google.protobuf.Empty\x12\x36\n\x12SendPrivateMessage\x12\x08.Message\x1a\x16.google.protobuf.Empty\x12\x39\n\x15RecievePrivateMessage\x12\x16.google.protobuf.Empty\x1a\x08.Messageb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'Client_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_EMPTY']._serialized_start=16
-  _globals['_EMPTY']._serialized_end=23
-  _globals['_USER']._serialized_start=25
-  _globals['_USER']._serialized_end=49
-  _globals['_MESSAGE']._serialized_start=51
-  _globals['_MESSAGE']._serialized_end=77
-  _globals['_CHATID']._serialized_start=79
-  _globals['_CHATID']._serialized_end=99
-  _globals['_CHATSERVICE']._serialized_start=102
-  _globals['_CHATSERVICE']._serialized_end=299
+  _globals['_USER']._serialized_start=45
+  _globals['_USER']._serialized_end=69
+  _globals['_MESSAGE']._serialized_start=71
+  _globals['_MESSAGE']._serialized_end=97
+  _globals['_CHATID']._serialized_start=99
+  _globals['_CHATID']._serialized_end=119
+  _globals['_CHATSERVICE']._serialized_start=122
+  _globals['_CHATSERVICE']._serialized_end=429
 # @@protoc_insertion_point(module_scope)
