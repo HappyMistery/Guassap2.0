@@ -7,7 +7,7 @@ import Client_pb2_grpc
 import NameServer_pb2
 import NameServer_pb2_grpc
 
-from ClientPrivatChat import private_chat
+from ClientPrivateChat import private_chat
 
 #Header that contains the logo and Username
 def add_header(w):
@@ -284,5 +284,3 @@ def start():
                             font=("Arial", 12), width=15, padx=10, pady=10, bg="#777", activebackground="#575")
 
     window.mainloop()
-
-
