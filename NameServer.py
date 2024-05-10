@@ -7,12 +7,12 @@ import NameServer_pb2
 from RedisService import registration_service
 
 def start():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    NameServer_pb2_grpc.add_NameServerServicer_to_server(NameServerServicer(), server)
     try:
+        server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        NameServer_pb2_grpc.add_NameServerServicer_to_server(NameServerServicer(), server)
         server.add_insecure_port('localhost:50051')
         server.start()
-    except:
+    except Exception as e:
         print("Server already started")
     print("The Name Server is waiting for registrations")
     try:

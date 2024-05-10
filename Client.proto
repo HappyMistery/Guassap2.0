@@ -35,5 +35,5 @@ service ChatService {
   rpc SendPrivateMessage (Message) returns (google.protobuf.Empty);
 
   // Recieves a private message
-  rpc RecievePrivateMessage (google.protobuf.Empty) returns (Message);
+  rpc RecievePrivateMessage (google.protobuf.Empty) returns (google.protobuf.Empty);
 }

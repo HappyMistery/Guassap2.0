@@ -1,4 +1,5 @@
-import subprocess, threading
+import subprocess
+import Starter
 
 def main():
     try:
@@ -17,17 +18,8 @@ def main():
     try:
         subprocess.check_call(['wsl', 'redis-server'])
     except Exception as e:
-        print(e)
+        print("redis server already started")
         
-    import Client, Server
-    
-    client_thread = threading.Thread(target=Client.start)
-    server_thread = threading.Thread(target=Server.start)
-    
-    client_thread.start()
-    server_thread.start()
-
-    client_thread.join()
-    server_thread.join()
+    Starter.main()
 main()
     
