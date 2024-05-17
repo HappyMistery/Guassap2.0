@@ -6,8 +6,23 @@ import Client_pb2
 import Client_pb2_grpc
 import NameServer_pb2
 import NameServer_pb2_grpc
+import MessageBroker_pb2
+import MessageBroker_pb2_grpc
 
 from ClientPrivateChat import private_chat
+
+class ChatServiceServicer(Client_pb2_grpc.ChatServiceServicer):
+    def SendPrivateMessage(self, request, context):
+        private_chat.send_message(request)
+        empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
+        return empty
+    
+    def RecievePrivateMessage(self, request, context):
+        response = Client_pb2.Message()
+        response = private_chat.recieve_message()
+        display_message(response.content, False)
+        empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
+        return empty
 
 #Header that contains the logo and Username
 def add_header(w):
@@ -36,6 +51,7 @@ def show_options():
     switch_user_button.pack(side="bottom", padx=10, pady=10)
     back_button.pack_forget()
     chat_frame.pack_forget()
+    subscribe_frame.pack_forget()
     if connected:
         cli_server.stop(grace=None)
         connected = False
@@ -107,22 +123,7 @@ def create_chat_window():
     message_entry.pack(padx=20, pady=10, side=tk.LEFT, fill=tk.X, expand=True)
     
     send_button = tk.Button(bottom_frame, text="Send", font=("Verdana", 14), command=send_message, bg="#8FEAE7", activebackground="#3C8CAE")
-    send_button.pack(padx=10, pady=10, side=tk.RIGHT)
-
-    
-class ChatServiceServicer(Client_pb2_grpc.ChatServiceServicer):
-    def SendPrivateMessage(self, request, context):
-        private_chat.send_message(request)
-        empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
-        return empty
-    
-    def RecievePrivateMessage(self, request, context):
-        response = Client_pb2.Message()
-        response = private_chat.recieve_message()
-        display_message(response.content, False)
-        empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
-        return empty
-    
+    send_button.pack(padx=10, pady=10, side=tk.RIGHT)    
     
     
 def connect_Chat():
@@ -143,7 +144,7 @@ def connect_private_chat():
     
     for button in chat_buttons:
         button.pack_forget()
-    user_ID_label = tk.Label(chat_frame, text="With who do you want to chat today?", bg="#333", fg="white", font=("Verdana", 15))
+    user_ID_label = tk.Label(chat_frame, text="Who do you want to chat with?", bg="#333", fg="white", font=("Verdana", 15))
     user_ID_label.grid(row=0, column=0, padx=10, pady=10)
     global user_id
     user_id = tk.Entry(chat_frame)
@@ -184,7 +185,26 @@ def connect_group_chat():
     
 def subscribe_GC():
     hide_options()
-    print("subscribe_GC()")
+    
+    for button in chat_buttons:
+        button.pack_forget()
+    gc_ID_label = tk.Label(subscribe_frame, text="which chat you want to subscribe to?", bg="#333", fg="white", font=("Verdana", 15))
+    gc_ID_label.grid(row=0, column=0, padx=10, pady=10)
+    global chat_id
+    chat_id = tk.Entry(subscribe_frame)
+    chat_id.grid(row=1, column=0, padx=10)
+    subscribe_button = tk.Button(subscribe_frame, text="Subscribe", command=subscribe_to_gc, bg="#555", activebackground="#575")
+    subscribe_button.grid(row=2, column=0, padx=10, pady=15)
+    subscribe_frame.pack(padx=10, pady=10)
+    
+    def subscribe_to_gc():
+        with grpc.insecure_channel('localhost:50050') as channel:
+            stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
+            gc = MessageBroker_pb2.ChatIdentifier(id=chat_id)
+            stub.SubscribeToGroupChat(gc)
+        sub_lbl = tk.Label(window, text=f'Subscribed to group chat {chat_id}!', bg="#333", fg="white", font=("Verdana", 15))
+        sub_lbl.pack(pady=10, padx=10)
+        sub_lbl.after(1500, sub_lbl.destroy)
     
 def discover_chats():
     hide_options()
@@ -273,7 +293,9 @@ def start():
     chat_buttons.append(group_chat)
     
     global chat_frame
+    global subscribe_frame
     chat_frame = tk.Frame(window, bg="#333")
+    subscribe_frame = tk.Frame(window, bg="#333")
     
     global back_button 
     back_button = tk.Button(window, text="Back to Menu", command=show_options,

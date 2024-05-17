@@ -1,7 +1,7 @@
 import subprocess
+import threading
 
 def main():
-    import Starter
     try:
         subprocess.check_call(['pip', 'install', '-r', 'requirements.txt'])
         print("Successfully installed requirements from requirements.txt")
@@ -30,6 +30,15 @@ def main():
     except Exception as e:
         print("rabbitmq already started")
         
-    Starter.main()
+    import Client, Server
+    
+    client_thread = threading.Thread(target=Client.start)
+    server_thread = threading.Thread(target=Server.start)
+    
+    client_thread.start()
+    server_thread.start()
+
+    client_thread.join()
+    server_thread.join()
 main()
     

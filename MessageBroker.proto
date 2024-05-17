@@ -1,60 +1,23 @@
 syntax = "proto3";
-
-// Message representing an empty response
-message Empty {}
+import "google/protobuf/empty.proto";
 
 // Message representing a chat identifier
-message ChatId {
+message ChatIdentifier {
   string id = 1;
-}
-
-// Message representing a user
-message UserAddress {
-  string useraddr = 1;
 }
 
 // Message representing a chat message
 message ChatMessage {
   string content = 1;
   string sender_username = 2;
-  int64 timestamp = 3;
+  string group_chat = 3;
 }
 
 // Service for managing message broker functionalities
 service MessageBroker {
-  // Publishes a message to a specific chat
-  rpc PublishMessage (ChatMessage) returns (Empty);
-}
+  // Creates the queue for a group chat
+  rpc SubscribeToGroupChat (ChatIdentifier) returns (google.protobuf.Empty);
 
-// Service for managing group chat functionalities
-service GroupChatService {
-  // Subscribes to a group chat
-  rpc SubscribeToGroupChat (ChatId) returns (stream ChatMessage);
-
-  // Connects to a group chat
-  rpc ConnectToGroupChat (ChatId) returns (stream ChatMessage);
-
-  // Sends a message to the group chat
-  rpc SendMessageToGroup (ChatMessage) returns (Empty);
-}
-
-// Service for chat discovery
-service ChatDiscovery {
-  // Publishes a discovery event to the broker
-  rpc PublishDiscoveryEvent (Empty) returns (Empty);
-
-  // Responds to a discovery event with connection parameters
-  rpc RespondToDiscoveryEvent (UserAddress) returns (Empty);
-
-  // Retrieves responses to the discovery event
-  rpc GetDiscoveryResponses (Empty) returns (stream UserAddress);
-}
-
-// Service for managing insult channel functionalities
-service InsultChannel {
-  // Subscribes to the insult channel
-  rpc SubscribeToInsultChannel (Empty) returns (stream ChatMessage);
-
-  // Sends an insult message to the channel
-  rpc SendInsult (ChatMessage) returns (Empty);
+  // publish a message to a group chat
+  rpc PublishMessageToGroupChat (ChatMessage) returns (google.protobuf.Empty);
 }

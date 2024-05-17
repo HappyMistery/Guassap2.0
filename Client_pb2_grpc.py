@@ -44,7 +44,7 @@ class ChatServiceStub(object):
         self.RecievePrivateMessage = channel.unary_unary(
                 '/ChatService/RecievePrivateMessage',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-                response_deserializer=Client__pb2.Message.FromString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
 
@@ -126,7 +126,7 @@ def add_ChatServiceServicer_to_server(servicer, server):
             'RecievePrivateMessage': grpc.unary_unary_rpc_method_handler(
                     servicer.RecievePrivateMessage,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-                    response_serializer=Client__pb2.Message.SerializeToString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -237,6 +237,6 @@ class ChatService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/ChatService/RecievePrivateMessage',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            Client__pb2.Message.FromString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

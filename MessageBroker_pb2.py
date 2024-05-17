@@ -12,29 +12,20 @@ from google.protobuf.internal import builder as _builder
 _sym_db = _symbol_database.Default()
 
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13MessageBroker.proto\"\x07\n\x05\x45mpty\"\x14\n\x06\x43hatId\x12\n\n\x02id\x18\x01 \x01(\t\"\x1f\n\x0bUserAddress\x12\x10\n\x08useraddr\x18\x01 \x01(\t\"J\n\x0b\x43hatMessage\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x17\n\x0fsender_username\x18\x02 \x01(\t\x12\x11\n\ttimestamp\x18\x03 \x01(\x03\x32\x37\n\rMessageBroker\x12&\n\x0ePublishMessage\x12\x0c.ChatMessage\x1a\x06.Empty2\x9e\x01\n\x10GroupChatService\x12/\n\x14SubscribeToGroupChat\x12\x07.ChatId\x1a\x0c.ChatMessage0\x01\x12-\n\x12\x43onnectToGroupChat\x12\x07.ChatId\x1a\x0c.ChatMessage0\x01\x12*\n\x12SendMessageToGroup\x12\x0c.ChatMessage\x1a\x06.Empty2\x9a\x01\n\rChatDiscovery\x12\'\n\x15PublishDiscoveryEvent\x12\x06.Empty\x1a\x06.Empty\x12/\n\x17RespondToDiscoveryEvent\x12\x0c.UserAddress\x1a\x06.Empty\x12/\n\x15GetDiscoveryResponses\x12\x06.Empty\x1a\x0c.UserAddress0\x01\x32g\n\rInsultChannel\x12\x32\n\x18SubscribeToInsultChannel\x12\x06.Empty\x1a\x0c.ChatMessage0\x01\x12\"\n\nSendInsult\x12\x0c.ChatMessage\x1a\x06.Emptyb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13MessageBroker.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x1c\n\x0e\x43hatIdentifier\x12\n\n\x02id\x18\x01 \x01(\t\"K\n\x0b\x43hatMessage\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x17\n\x0fsender_username\x18\x02 \x01(\t\x12\x12\n\ngroup_chat\x18\x03 \x01(\t2\x93\x01\n\rMessageBroker\x12?\n\x14SubscribeToGroupChat\x12\x0f.ChatIdentifier\x1a\x16.google.protobuf.Empty\x12\x41\n\x19PublishMessageToGroupChat\x12\x0c.ChatMessage\x1a\x16.google.protobuf.Emptyb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'MessageBroker_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_EMPTY']._serialized_start=23
-  _globals['_EMPTY']._serialized_end=30
-  _globals['_CHATID']._serialized_start=32
-  _globals['_CHATID']._serialized_end=52
-  _globals['_USERADDRESS']._serialized_start=54
-  _globals['_USERADDRESS']._serialized_end=85
-  _globals['_CHATMESSAGE']._serialized_start=87
-  _globals['_CHATMESSAGE']._serialized_end=161
-  _globals['_MESSAGEBROKER']._serialized_start=163
-  _globals['_MESSAGEBROKER']._serialized_end=218
-  _globals['_GROUPCHATSERVICE']._serialized_start=221
-  _globals['_GROUPCHATSERVICE']._serialized_end=379
-  _globals['_CHATDISCOVERY']._serialized_start=382
-  _globals['_CHATDISCOVERY']._serialized_end=536
-  _globals['_INSULTCHANNEL']._serialized_start=538
-  _globals['_INSULTCHANNEL']._serialized_end=641
+  _globals['_CHATIDENTIFIER']._serialized_start=52
+  _globals['_CHATIDENTIFIER']._serialized_end=80
+  _globals['_CHATMESSAGE']._serialized_start=82
+  _globals['_CHATMESSAGE']._serialized_end=157
+  _globals['_MESSAGEBROKER']._serialized_start=160
+  _globals['_MESSAGEBROKER']._serialized_end=307
 # @@protoc_insertion_point(module_scope)
