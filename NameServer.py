@@ -13,8 +13,8 @@ def start():
         server.add_insecure_port('localhost:50051')
         server.start()
     except Exception as e:
-        print("Server already started")
-    print("The Name Server is waiting for registrations")
+        print("NameServer already started")
+    print("\nThe Name Server is waiting for registrations")
     try:
         while True:
             time.sleep(86400)

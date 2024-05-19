@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13MessageBroker.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x1c\n\x0e\x43hatIdentifier\x12\n\n\x02id\x18\x01 \x01(\t\"K\n\x0b\x43hatMessage\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x17\n\x0fsender_username\x18\x02 \x01(\t\x12\x12\n\ngroup_chat\x18\x03 \x01(\t2\x93\x01\n\rMessageBroker\x12?\n\x14SubscribeToGroupChat\x12\x0f.ChatIdentifier\x1a\x16.google.protobuf.Empty\x12\x41\n\x19PublishMessageToGroupChat\x12\x0c.ChatMessage\x1a\x16.google.protobuf.Emptyb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13MessageBroker.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x1c\n\x0e\x43hatIdentifier\x12\n\n\x02id\x18\x01 \x01(\t\"K\n\x0b\x43hatMessage\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x17\n\x0fsender_username\x18\x02 \x01(\t\x12\x12\n\ngroup_chat\x18\x03 \x01(\t2\xd4\x01\n\rMessageBroker\x12?\n\x14SubscribeToGroupChat\x12\x0f.ChatIdentifier\x1a\x16.google.protobuf.Empty\x12\x41\n\x19PublishMessageToGroupChat\x12\x0c.ChatMessage\x1a\x16.google.protobuf.Empty\x12?\n\x1c\x43onsumeMessagesFromGroupChat\x12\x0f.ChatIdentifier\x1a\x0c.ChatMessage0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -27,5 +27,5 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_CHATMESSAGE']._serialized_start=82
   _globals['_CHATMESSAGE']._serialized_end=157
   _globals['_MESSAGEBROKER']._serialized_start=160
-  _globals['_MESSAGEBROKER']._serialized_end=307
+  _globals['_MESSAGEBROKER']._serialized_end=372
 # @@protoc_insertion_point(module_scope)

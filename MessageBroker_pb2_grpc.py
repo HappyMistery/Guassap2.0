@@ -26,6 +26,11 @@ class MessageBrokerStub(object):
                 request_serializer=MessageBroker__pb2.ChatMessage.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
+        self.ConsumeMessagesFromGroupChat = channel.unary_stream(
+                '/MessageBroker/ConsumeMessagesFromGroupChat',
+                request_serializer=MessageBroker__pb2.ChatIdentifier.SerializeToString,
+                response_deserializer=MessageBroker__pb2.ChatMessage.FromString,
+                )
 
 
 class MessageBrokerServicer(object):
@@ -46,6 +51,13 @@ class MessageBrokerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ConsumeMessagesFromGroupChat(self, request, context):
+        """consume messages from a group chat
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_MessageBrokerServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -58,6 +70,11 @@ def add_MessageBrokerServicer_to_server(servicer, server):
                     servicer.PublishMessageToGroupChat,
                     request_deserializer=MessageBroker__pb2.ChatMessage.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'ConsumeMessagesFromGroupChat': grpc.unary_stream_rpc_method_handler(
+                    servicer.ConsumeMessagesFromGroupChat,
+                    request_deserializer=MessageBroker__pb2.ChatIdentifier.FromString,
+                    response_serializer=MessageBroker__pb2.ChatMessage.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -101,5 +118,22 @@ class MessageBroker(object):
         return grpc.experimental.unary_unary(request, target, '/MessageBroker/PublishMessageToGroupChat',
             MessageBroker__pb2.ChatMessage.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ConsumeMessagesFromGroupChat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/MessageBroker/ConsumeMessagesFromGroupChat',
+            MessageBroker__pb2.ChatIdentifier.SerializeToString,
+            MessageBroker__pb2.ChatMessage.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
