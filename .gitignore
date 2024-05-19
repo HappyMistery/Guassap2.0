@@ -1,5 +1,5 @@
-.venv/
-__pycache__/
+.venv/*
+__pycache__/*
 Client_pb2*
 MessageBroker_pb2*
 NameServer_pb2*
