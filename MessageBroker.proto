@@ -1,26 +1,26 @@
 syntax = "proto3";
 import "google/protobuf/empty.proto";
 
-// Message representing a chat identifier
-message ChatIdentifier {
-  string id = 1;
+// Message representing a user's connection to a group chat
+message Subscription {
+  string subscribed = 1;
 }
 
 // Message representing a chat message
 message ChatMessage {
   string content = 1;
-  string sender_username = 2;
+  string sender = 2;
   string group_chat = 3;
 }
 
 // Service for managing message broker functionalities
 service MessageBroker {
   // Creates the queue for a group chat
-  rpc SubscribeToGroupChat (ChatIdentifier) returns (google.protobuf.Empty);
+  rpc SubscribeToGroupChat (ChatMessage) returns (Subscription);
 
   // publish a message to a group chat
   rpc PublishMessageToGroupChat (ChatMessage) returns (google.protobuf.Empty);
 
   // consume messages from a group chat
-  rpc ConsumeMessagesFromGroupChat (ChatIdentifier) returns (stream ChatMessage);
+  rpc ConsumeMessagesFromGroupChat (ChatMessage) returns (stream ChatMessage);
 }

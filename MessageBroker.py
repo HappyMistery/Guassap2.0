@@ -27,34 +27,55 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
     def SubscribeToGroupChat(self, request, context):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
-        channel.queue_declare(queue=request.id)
+        
+        exchange = f"exchange_{request.group_chat}"
+        queue = f"{request.group_chat}_{request.sender}"
+        
+        channel.exchange_declare(exchange=exchange, exchange_type='fanout')
+        
+        if(request.content == 'check'):
+            try:
+                channel.queue_declare(queue=queue, passive=True)
+                subscription = MessageBroker_pb2.Subscription(subscribed='True')
+                connection.close()
+            except Exception as e:
+                subscription = MessageBroker_pb2.Subscription(subscribed='False')
+            return subscription
+        
+        channel.queue_declare(queue=queue)
+        channel.queue_bind(exchange=exchange, queue=queue)
         connection.close()
-        empty = MessageBroker_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
-        return empty
+        subscription = MessageBroker_pb2.Subscription(subscribed='True')
+        return subscription
 
     def PublishMessageToGroupChat(self, request, context):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
+        
+        exchange = f"exchange_{request.group_chat}"
 
-        channel.basic_publish(exchange='', routing_key=request.group_chat, body=request.content)
+        channel.basic_publish(exchange=exchange, routing_key='', body=request.content)
         connection.close()
+        
         empty = MessageBroker_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
         return empty
     
     def ConsumeMessagesFromGroupChat(self, request, context):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
-        channel.queue_declare(queue=request.id)
+        
+        queue = f"{request.group_chat}_{request.sender}"
+        
+        channel.queue_declare(queue=queue)
 
         def consume_messages():
-            print("Trying to get messages...")
             while True:
-                method_frame, _, body = channel.basic_get(queue=request.id, auto_ack=True)
+                method_frame, properties, body = channel.basic_get(queue=queue, auto_ack=True)
                 if method_frame:
-                    response = MessageBroker_pb2.ChatMessage(content=body.decode(), sender_username='', group_chat=request.id)
+                    response = MessageBroker_pb2.ChatMessage(content=body.decode(), sender=request.username, group_chat=request.id)
                     yield response
                 else:
-                    # If no message is available, sleep for a short time to avoid looping too fast
+                    # If no message is available, we let the rest of the program run without blocking
                     break
 
         return consume_messages()

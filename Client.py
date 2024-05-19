@@ -52,6 +52,7 @@ def show_options():
     switch_user_button.pack(side="bottom", padx=10, pady=10)
     back_button.pack_forget()
     chat_frame.pack_forget()
+    connect_gc_frame.pack_forget()
     subscribe_gc_frame.pack_forget()
     if connected:
         cli_server.stop(grace=None)
@@ -111,7 +112,7 @@ def create_chat_window(chatter, isGroupChat=False):
                 with grpc.insecure_channel('localhost:50050') as channel:
                     stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
                     print(f"I ({username}) am sending '{message}' to {chatter}")
-                    msg = MessageBroker_pb2.ChatMessage(content=message, sender_username=username, group_chat=chatter)
+                    msg = MessageBroker_pb2.ChatMessage(content=message, sender=username, group_chat=chatter)
                     stub.PublishMessageToGroupChat(msg)
                 
 
@@ -140,7 +141,7 @@ def create_chat_window(chatter, isGroupChat=False):
     if(isGroupChat):
         with grpc.insecure_channel('localhost:50050') as channel:
             stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
-            gc_id = MessageBroker_pb2.ChatIdentifier(id=chat_id.get())
+            gc_id = MessageBroker_pb2.ChatMessage(content='', sender=username, group_chat=chat_id.get())
             messages = stub.ConsumeMessagesFromGroupChat(gc_id)
 
             for msg in messages:
@@ -214,8 +215,17 @@ def connect_group_chat():
     connect_gc_frame.pack(padx=10, pady=10)
     
 def start_group_chat():
-    print(f'Connecting to group chat {chat_id.get()}')
-    create_chat_window(chat_id.get(), True)
+    with grpc.insecure_channel('localhost:50050') as channel:
+        stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
+        gc = MessageBroker_pb2.ChatMessage(content='check', sender=username, group_chat=chat_id.get())
+        subscribed = MessageBroker_pb2.Subscription(subscribed='')
+        subscribed = stub.SubscribeToGroupChat(gc)
+    if(subscribed.subscribed == 'False'):
+        gc_connection_refused_lbl = tk.Label(window, text=f'You can\'t connect to group chat {chat_id.get()} if you are not subscribed to it!', bg="#333", fg="white", font=("Verdana", 15))
+        gc_connection_refused_lbl.pack(pady=10, padx=10)
+        gc_connection_refused_lbl.after(1500, gc_connection_refused_lbl.destroy)
+    else:
+        create_chat_window(chat_id.get(), True)
     
 def subscribe_GC():
     hide_options()
@@ -234,7 +244,7 @@ def subscribe_GC():
 def subscribe_to_gc():
     with grpc.insecure_channel('localhost:50050') as channel:
         stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
-        gc = MessageBroker_pb2.ChatIdentifier(id=chat_id.get())
+        gc = MessageBroker_pb2.ChatMessage(content='', sender=username, group_chat=chat_id.get())
         stub.SubscribeToGroupChat(gc)
     sub_lbl = tk.Label(window, text=f'Subscribed to group chat {chat_id.get()}!', bg="#333", fg="white", font=("Verdana", 15))
     sub_lbl.pack(pady=10, padx=10)
