@@ -66,12 +66,25 @@ def hide_options():
     back_button.pack(side="bottom", padx=10, pady=10)  # Mostrar el botón "Tirar hacia atrás"
 
 # Function to display chat messages
-def display_message(message, is_user):
-    msg_color = "#777" if is_user else "#555"
-    text_color = "white" if msg_color == "#555" else "black"
+def display_message(message, is_user, is_gc_msg=False):
+    global username
+    
     estimated_width = len(message) + 2
     estimated_height = int((len(message) // (chat_window.winfo_width() / 13)) % (chat_window.winfo_width() / 13)) + 1
+    
+    if(is_gc_msg):
+        msg_info = message.split(":", 1)
+        if(msg_info[0] == username): 
+            is_user=True
+            message = msg_info[1]
+        else:
+            estimated_height=estimated_height+1
+            message = f"{msg_info[0]}:\n{msg_info[1]}"
+        
+    msg_color = "#777" if is_user else "#555"
+    text_color = "white" if msg_color == "#555" else "black"
     side = 'e' if is_user else 'w'
+    
     new_message = tk.Text(message_container, width=estimated_width, height=estimated_height, wrap=tk.WORD, bg=msg_color, fg=text_color, font=("Verdana", 13))
     new_message.insert(tk.INSERT, message)
     new_message.config(state=tk.DISABLED)
@@ -104,16 +117,15 @@ def create_chat_window(chatter, isGroupChat=False):
                     message = Client_pb2.Message(content=message)
                     stub.SendPrivateMessage(message)
                     stub.RecievePrivateMessage(empty)
-        else:
-            message = message_entry.get()
-            if message:
-                display_message(message, True)
-                message_entry.delete(0, tk.END)
-                with grpc.insecure_channel('localhost:50050') as channel:
-                    stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
-                    print(f"I ({username}) am sending '{message}' to {chatter}")
-                    msg = MessageBroker_pb2.ChatMessage(content=message, sender=username, group_chat=chatter)
-                    stub.PublishMessageToGroupChat(msg)
+            return
+        message = message_entry.get()
+        if message:
+            display_message(message, True)
+            message_entry.delete(0, tk.END)
+            with grpc.insecure_channel('localhost:50050') as channel:
+                stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
+                msg = MessageBroker_pb2.ChatMessage(content=message, sender=username, group_chat=chatter)
+                stub.PublishMessageToGroupChat(msg)
                 
 
     # Create chat history Text widget
@@ -138,14 +150,15 @@ def create_chat_window(chatter, isGroupChat=False):
     send_button = tk.Button(bottom_frame, text="Send", font=("Verdana", 14), command=send_message, bg="#8FEAE7", activebackground="#3C8CAE")
     send_button.pack(padx=10, pady=10, side=tk.RIGHT)
     
+    global username
     if(isGroupChat):
         with grpc.insecure_channel('localhost:50050') as channel:
             stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
             gc_id = MessageBroker_pb2.ChatMessage(content='', sender=username, group_chat=chat_id.get())
             messages = stub.ConsumeMessagesFromGroupChat(gc_id)
-
             for msg in messages:
-                display_message(msg.content, False)
+                msg_info = f"{msg.sender}:{msg.content}"
+                display_message(msg_info, False, True)
     
     
 def connect_Chat():
@@ -352,3 +365,5 @@ def start():
                             font=("Arial", 12), width=15, padx=10, pady=10, bg="#777", activebackground="#575")
 
     window.mainloop()
+
+start()

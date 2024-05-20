@@ -14,7 +14,6 @@ def start():
         server.start()
     except Exception as e:
         print("NameServer already started")
-    print("\nThe Name Server is waiting for registrations")
     try:
         while True:
             time.sleep(86400)
