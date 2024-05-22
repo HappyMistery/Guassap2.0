@@ -26,8 +26,6 @@ def start():
         broker.stop(0)
     
 class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
-    global channel
-    global ns
     def SubscribeToGroupChat(self, request, context):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
@@ -64,7 +62,7 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
         
         msg = f"{request.sender}:{request.content}"
 
-        channel.basic_publish(exchange=exchange, routing_key='', body=msg, properties=pika.BasicProperties(delivery_mode=2))
+        channel.basic_publish(exchange=exchange, routing_key='', body=msg, properties=pika.BasicProperties(delivery_mode=2,))
         connection.close()
         
         empty = MessageBroker_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
@@ -82,7 +80,7 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
                 time.sleep(0.1)
             
             try:
-                for method_frame, properties, body in channel.consume(queue=queue, auto_ack=True):
+                for method_frame, properties, body in channel.consume(queue=queue):
                     msg_info = body.decode().split(":", 1)
                     response = MessageBroker_pb2.ChatMessage(content=msg_info[1], sender=msg_info[0], group_chat=request.group_chat)
                     yield response

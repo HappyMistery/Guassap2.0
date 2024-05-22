@@ -12,7 +12,8 @@ import MessageBroker_pb2_grpc
 
 from ClientPrivateChat import private_chat
 
-# Handles sending and receiving private messages
+#========================================================STUB========================================================
+# Client stub. Handles sending and receiving private messages
 class ChatServiceServicer(Client_pb2_grpc.ChatServiceServicer):
     def SendPrivateMessage(self, request, context):
         private_chat.send_message(request)
@@ -25,7 +26,9 @@ class ChatServiceServicer(Client_pb2_grpc.ChatServiceServicer):
         display_message(response.content, False)
         empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
         return empty
-
+#=======================================================================================================================
+#|||                                                UI METHODS                                                       |||
+#=======================================================================================================================
 #Header that contains the logo and Username
 def add_header(w):
     global logo
@@ -36,62 +39,75 @@ def add_header(w):
     logo_label = tk.Label(header_frame, image=logo, bg="#222", padx=10, pady=10)
     logo_label.pack(side=tk.LEFT, anchor="nw")
 
-#Takes the user to the login/register window
+#Takes the user to the login/register window and closes its connection
 def switch_user():
     frame.pack(pady=10, anchor="n")
     hide_options()
     back_button.pack_forget()
     usr_label.pack_forget()
+    if connected:   #If the user is connected, close its channel and set them to not connected
+        cli_server.stop(grace=None)
+        connected = False
 
-#Makes the Option buttons visible
+#Takes the user to the Options Menu
 def show_options():
     global connected
     for button in option_buttons:
         button.pack(pady=10)
     for button in chat_buttons:
         button.pack_forget()
-    switch_user_button.pack(side="bottom", padx=10, pady=10)
+    switch_user_button.pack(side="bottom", padx=10, pady=10) #Show button "Switch User"
     back_button.pack_forget()
     chat_frame.pack_forget()
     connect_gc_frame.pack_forget()
     subscribe_gc_frame.pack_forget()
-    if connected:
-        cli_server.stop(grace=None)
-        connected = False
 
-# Hides the option buttons
+# Hides the Options Menu
 def hide_options():
     for button in option_buttons:
         button.pack_forget()    
     switch_user_button.pack_forget()
-    back_button.pack(side="bottom", padx=10, pady=10)  # Mostrar el botón "Tirar hacia atrás"
+    back_button.pack(side="bottom", padx=10, pady=10)  # Show button "Go Back"
 
-# Function to display chat messages
+
+
+#=======================================================================================================================
+#|||                                              CHAT METHODS                                                       |||
+#=======================================================================================================================
+
+# Function to display chat messages (for private and group chats)
 def display_message(message, is_user, is_gc_msg=False):
     global username
     
+    #Calculates message's width and height based on the number of characters it has so it fits on the screen
     estimated_width = len(message) + 2
     estimated_height = int((len(message) // (chat_window.winfo_width() / 13)) % (chat_window.winfo_width() / 13)) + 1
     
+    #If it's a group chat message split it by ':' and only print the sender of the message if it's not the user itself
     if(is_gc_msg):
         msg_info = message.split(":", 1)
         if(msg_info[0] == username): 
             is_user=True
             message = msg_info[1]
         else:
-            estimated_height=estimated_height+1
-            message = f"{msg_info[0]}:\n{msg_info[1]}"
-        
+            estimated_height=estimated_height+1 #To print the sender we need an extra row on the message box
+            message = f"{msg_info[0]}:\n{msg_info[1]}"  #prints sender:\nmessage
+    
+    #Different message box and message font colour and chat side depending on the sender
     msg_color = "#777" if is_user else "#555"
     text_color = "white" if msg_color == "#555" else "black"
     side = 'e' if is_user else 'w'
     
+    #Create a message box containing the message
     new_message = tk.Text(message_container, width=estimated_width, height=estimated_height, wrap=tk.WORD, bg=msg_color, fg=text_color, font=("Verdana", 13))
     new_message.insert(tk.INSERT, message)
-    new_message.config(state=tk.DISABLED)
+    new_message.config(state=tk.DISABLED)   # message can't be edited
     new_message.pack(anchor=side, padx=5, pady=2)
     
-# Creates a new chat window for a given chatter
+    
+    
+    
+# Creates a new chat window for a given chatter (chatter can be another user's id or a group chat's id)
 def create_chat_window(chatter, isGroupChat=False):
     global chat_window
     chat_window = tk.Toplevel(window)
@@ -102,74 +118,72 @@ def create_chat_window(chatter, isGroupChat=False):
     global usr_label
     usr_label = tk.Label(header_frame, text=chatter, bg="#222", fg="white", font=("Verdana", 15))
     usr_label.pack(anchor="n", pady=33)
-        
+
+    # Create chat history Text widget (Where all the chat messages are displayed)
+    global message_container
+    chat_history = tk.Frame(chat_window, bg="#333")
+    chat_history.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+    message_container = tk.Canvas(chat_history, bg="#333")
+    message_container.pack(fill=tk.BOTH, expand=True)
+    scrollbar = tk.Scrollbar(message_container, orient=tk.VERTICAL, command=message_container.yview)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    bottom_frame = tk.Frame(chat_window, bg="#444")
+    bottom_frame.pack(side=tk.BOTTOM, fill=tk.X)
 
     # Function to send message
     def send_message():
         global empty
         global username
+        message = message_entry.get()
         if(not isGroupChat):
-            message = message_entry.get()
             empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
             if message:
                 display_message(message, True)
                 message_entry.delete(0, tk.END)
-                with grpc.insecure_channel(response.address) as channel:
+                with grpc.insecure_channel(response.address) as channel:    # Connect through gRPC with other user
                     stub = Client_pb2_grpc.ChatServiceStub(channel)
                     message = Client_pb2.Message(content=message)
                     stub.SendPrivateMessage(message)
                     stub.RecievePrivateMessage(empty)
             return
-        message = message_entry.get()
         if message:
-            #display_message(message, True)
             message_entry.delete(0, tk.END)
-            with grpc.insecure_channel('localhost:50050') as channel:
+            with grpc.insecure_channel('localhost:50050') as channel:   # Connect through gRPC with Message Broker
                 stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
                 msg = MessageBroker_pb2.ChatMessage(content=message, sender=username, group_chat=chatter)
                 stub.PublishMessageToGroupChat(msg)
-                #stub.ConsumeMessagesFromGroupChat(msg)
                 
-
-    # Create chat history Text widget
-    global message_container
-    chat_history = tk.Frame(chat_window, bg="#333")
-    chat_history.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
-
-    message_container = tk.Canvas(chat_history, bg="#333")
-    message_container.pack(fill=tk.BOTH, expand=True)
-
-    scrollbar = tk.Scrollbar(message_container, orient=tk.VERTICAL, command=message_container.yview)
-    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-    bottom_frame = tk.Frame(chat_window, bg="#444")
-    bottom_frame.pack(side=tk.BOTTOM, fill=tk.X)
-
-    # Message entry field
+    # Create Message entry field where the user writes its messages 
     global message_entry
     message_entry = tk.Entry(bottom_frame, bg="#777" ,font=("Verdana", 14))
     message_entry.pack(padx=20, pady=10, side=tk.LEFT, fill=tk.X, expand=True)
     
+    # Create Send button to send the message once written
     send_button = tk.Button(bottom_frame, text="Send", font=("Verdana", 14), command=send_message, bg="#8FEAE7", activebackground="#3C8CAE")
     send_button.pack(padx=10, pady=10, side=tk.RIGHT)
     
+    # Starts consuming messages from a group chat (exchange)
     def consume_messages():
-        with grpc.insecure_channel('localhost:50050') as channel:
+        with grpc.insecure_channel('localhost:50050') as channel: # Connect through gRPC with Message Broker
             stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
             gc_id = MessageBroker_pb2.ChatMessage(content='', sender=username, group_chat=chat_id.get())
             messages = stub.ConsumeMessagesFromGroupChat(gc_id)
-            if(messages is not None):
+            if(messages is not None):   # If there is some message to recieve
                 for msg in messages:
                     msg_info = f"{msg.sender}:{msg.content}"
-                    display_message(msg_info, False, True)
+                    display_message(msg_info, False, True)  # Display message on user's screen
             else:
                 print("No messages recieved yet")
                 
-    global username
+    # In order to consume from a group chat without blocking, we run the consuming part through a thread
     if(isGroupChat):
         consumer_thread = threading.Thread(target=consume_messages)
         consumer_thread.daemon = True  # Allows the program to exit even if the thread is running
         consumer_thread.start()
+        
+        
+        
+
     
 # Connects to chat and shows chat options
 def connect_Chat():
@@ -179,15 +193,6 @@ def connect_Chat():
     
 # Connects to a private chat
 def connect_private_chat():
-    global user_port
-    global cli_server
-    global connected
-    cli_server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
-    Client_pb2_grpc.add_ChatServiceServicer_to_server(ChatServiceServicer(), cli_server)
-    cli_server.add_insecure_port(f'localhost:{user_port}')
-    cli_server.start()
-    connected = True
-    
     for button in chat_buttons:
         button.pack_forget()
     user_ID_label = tk.Label(chat_frame, text="Who do you want to chat with?", bg="#333", fg="white", font=("Verdana", 15))
@@ -328,6 +333,8 @@ def start():
         global username
         global user
         global user_port
+        global cli_server
+        global connected
         username = username_entry.get()
         
         with grpc.insecure_channel('localhost:50051') as channel:
@@ -342,6 +349,12 @@ def start():
             print("Usuari Registrat")
         else:
             print("Usuari Identificat")
+            
+        cli_server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
+        Client_pb2_grpc.add_ChatServiceServicer_to_server(ChatServiceServicer(), cli_server)
+        cli_server.add_insecure_port(f'localhost:{user_port}')
+        cli_server.start()
+        connected = True
         
         global usr_label
         usr_label = tk.Label(header_frame, text=username, bg="#222", fg="white", font=("Verdana", 15))
