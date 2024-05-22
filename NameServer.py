@@ -35,3 +35,14 @@ class NameServerServicer(NameServer_pb2_grpc.NameServerServicer):
         else:
             response.address = u_info
         return response
+    
+    def UpdateGroupsList(self, request, context):
+        registration_service.update_groups_list(request)
+        response = NameServer_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
+        return response
+    
+    def GetGroupsList(self, request, context):
+        group_chats_list = NameServer_pb2.UserAddress(username='group_chats')
+        groups = registration_service.get_user_info(group_chats_list)
+        response = NameServer_pb2.ChatAddress(address=groups)
+        return response

@@ -12,6 +12,7 @@ import MessageBroker_pb2_grpc
 
 from ClientPrivateChat import private_chat
 
+# Handles sending and receiving private messages
 class ChatServiceServicer(Client_pb2_grpc.ChatServiceServicer):
     def SendPrivateMessage(self, request, context):
         private_chat.send_message(request)
@@ -58,7 +59,7 @@ def show_options():
         cli_server.stop(grace=None)
         connected = False
 
-
+# Hides the option buttons
 def hide_options():
     for button in option_buttons:
         button.pack_forget()    
@@ -89,7 +90,8 @@ def display_message(message, is_user, is_gc_msg=False):
     new_message.insert(tk.INSERT, message)
     new_message.config(state=tk.DISABLED)
     new_message.pack(anchor=side, padx=5, pady=2)
-
+    
+# Creates a new chat window for a given chatter
 def create_chat_window(chatter, isGroupChat=False):
     global chat_window
     chat_window = tk.Toplevel(window)
@@ -126,6 +128,7 @@ def create_chat_window(chatter, isGroupChat=False):
                 stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
                 msg = MessageBroker_pb2.ChatMessage(content=message, sender=username, group_chat=chatter)
                 stub.PublishMessageToGroupChat(msg)
+                stub.ConsumeMessagesFromGroupChat(msg)
                 
 
     # Create chat history Text widget
@@ -159,14 +162,15 @@ def create_chat_window(chatter, isGroupChat=False):
             for msg in messages:
                 msg_info = f"{msg.sender}:{msg.content}"
                 display_message(msg_info, False, True)
+        
     
-    
+# Connects to chat and shows chat options
 def connect_Chat():
     hide_options()
     for button in chat_buttons:
         button.pack(padx=10, pady=10)
     
-    
+# Connects to a private chat
 def connect_private_chat():
     global user_port
     global cli_server
@@ -188,7 +192,7 @@ def connect_private_chat():
     chat_button.grid(row=2, column=0, padx=10, pady=15)
     chat_frame.pack(padx=10, pady=10)
     
-    
+# Starts gRPC client for private chat
 def start_grpc_client():
     with grpc.insecure_channel('localhost:50051') as channel:
         stub = NameServer_pb2_grpc.NameServerStub(channel)
@@ -214,7 +218,7 @@ def start_grpc_client():
         no_user_lbl.after(1500, no_user_lbl.destroy)
         return
 
-        
+# Connects to a group chat        
 def connect_group_chat():
     for button in chat_buttons:
         button.pack_forget()
@@ -227,6 +231,7 @@ def connect_group_chat():
     connect_button.grid(row=2, column=0, padx=10, pady=15)
     connect_gc_frame.pack(padx=10, pady=10)
     
+# Start a group chat
 def start_group_chat():
     with grpc.insecure_channel('localhost:50050') as channel:
         stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
@@ -254,6 +259,7 @@ def subscribe_GC():
     subscribe_button.grid(row=2, column=0, padx=10, pady=15)
     subscribe_gc_frame.pack(padx=10, pady=10)
     
+# Subscribes to a group chat
 def subscribe_to_gc():
     with grpc.insecure_channel('localhost:50050') as channel:
         stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
@@ -264,19 +270,35 @@ def subscribe_to_gc():
     sub_lbl.after(1500, sub_lbl.destroy)
     
 def discover_chats():
-    hide_options()
-    print("discover_chats()")
+    with grpc.insecure_channel('localhost:50050') as channel:
+        stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
+        groups = stub.ChatDiscovery(MessageBroker_pb2.google_dot_protobuf_dot_empty__pb2.Empty())
+    display_discovery_results(groups)
+
+# Display discovery results in a new window
+def display_discovery_results(groups):
+    discovery_window = tk.Toplevel(window)
+    discovery_window.title("Discover Active Group Chats")
+    discovery_window.geometry("400x600+500+100")
+    discovery_window.configure(bg="#333")
+
+    def enter_discovered_gc():
+        create_chat_window(group, isGroupChat=True)
+
+    header = tk.Label(discovery_window, text="Active Group Chats", bg="#333", fg="white", font=("Verdana", 15))
+    header.pack(pady=10)
+    groups_list = groups.group_chat.split(',')
+    unique_strings = list(set(groups_list))
+    for group in unique_strings:
+        if(group != ''):
+            discovered_group_button = tk.Button(discovery_window, text=group, command=enter_discovered_gc, bg="#555", activebackground="#575")
+            discovered_group_button.pack(pady=5, padx=10, fill=tk.X)
+
+
     
 def access_insult_channel():
     hide_options()
     print("access_insult_channel()")
-
-
-
-
-
-
-
 
 def start():
     #Create the window
@@ -333,12 +355,18 @@ def start():
     
     global option_buttons
     option_buttons = []
-    button_names = ["Connect chat", "Subscribe to group chat", "Discover chats", "Access insult channel"]
-    button_commands = ["connect_Chat()", "subscribe_GC()", "discover_chats()", "access_insult_channel()"]
-    for i, name in enumerate(button_names):
-        button = tk.Button(window, text=f"{name}", command=lambda i=i: eval(button_commands[i]), 
-                           font=("Arial", 14), width=20, padx=10, pady=10, bg="#777", activebackground="#575")
-        option_buttons.append(button)
+    button = tk.Button(window, text="Connect chat", command=connect_Chat, 
+                        font=("Arial", 14), width=20, padx=10, pady=10, bg="#777", activebackground="#575")
+    option_buttons.append(button)
+    button = tk.Button(window, text="Subscribe to group chat", command=subscribe_GC, 
+                        font=("Arial", 14), width=20, padx=10, pady=10, bg="#777", activebackground="#575")
+    option_buttons.append(button)
+    button = tk.Button(window, text="Discover chats", command=discover_chats, 
+                        font=("Arial", 14), width=20, padx=10, pady=10, bg="#777", activebackground="#575")
+    option_buttons.append(button)
+    button = tk.Button(window, text="Access insult channel", command=access_insult_channel, 
+                        font=("Arial", 14), width=20, padx=10, pady=10, bg="#777", activebackground="#575")
+    option_buttons.append(button)
     
     global chat_buttons
     chat_buttons = []

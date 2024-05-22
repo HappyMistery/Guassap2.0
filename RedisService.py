@@ -5,6 +5,8 @@ r = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
 if not r.exists('user_port'):
     r.set('user_port', 50052)
+if not r.exists('group_chats'):
+    r.set('group_chats', '')
 
 
 class RedisService:
@@ -19,5 +21,9 @@ class RedisService:
     
     def get_user_info(self, request):
         return r.get(request.username)
+    
+    def update_groups_list(self, request):
+        r.set('group_chats', f"{r.get('group_chats')}{request.address},")
+        
 
 registration_service = RedisService()

@@ -1,4 +1,5 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
 
 // Message representing a chat identifier
 message IdChat {
@@ -36,4 +37,10 @@ service NameServer {
 
   // Retrieves the address associated with a chat ID
   rpc GetChatAddress (IdChat) returns (ChatAddress);
-}
+
+  // Updates the list with a new group chat
+  rpc UpdateGroupsList (ChatAddress) returns (google.protobuf.Empty) {};
+
+  // Gets all the groups from the groups list
+  rpc GetGroupsList (google.protobuf.Empty) returns (ChatAddress);
+  }
