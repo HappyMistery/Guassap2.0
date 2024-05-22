@@ -64,7 +64,7 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
         
         msg = f"{request.sender}:{request.content}"
 
-        channel.basic_publish(exchange=exchange, routing_key='', body=msg, properties=pika.BasicProperties(delivery_mode=2,))
+        channel.basic_publish(exchange=exchange, routing_key='', body=msg, properties=pika.BasicProperties(delivery_mode=2))
         connection.close()
         
         empty = MessageBroker_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
@@ -75,28 +75,24 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
         channel = connection.channel()
         
         queue = f"{request.group_chat}_{request.sender}"
-        
         channel.queue_declare(queue=queue, durable=True)
-        
+
         def consume_messages():
-            #for method_frame, properties, body in channel.consume(queue=queue, auto_ack=False):
-            #    msg_info = body.decode().split(":", 1)
-            #    response = MessageBroker_pb2.ChatMessage(content=msg_info[1], sender=msg_info[0], group_chat=request.group_chat)
-            #yield response
+            while not context.is_active():
+                time.sleep(0.1)
             
-            while True:
-                method_frame, properties, body = channel.basic_get(queue=queue, auto_ack=False)
-                if method_frame:
+            try:
+                for method_frame, properties, body in channel.consume(queue=queue, auto_ack=True):
                     msg_info = body.decode().split(":", 1)
                     response = MessageBroker_pb2.ChatMessage(content=msg_info[1], sender=msg_info[0], group_chat=request.group_chat)
                     yield response
-                else:
-                    # If no message is available, we let the rest of the program run without blocking
-                    break
-        #consume_thread = threading.Thread(target=consume_messages)
-        #consume_thread.start()
+                    if not context.is_active():
+                        break
+            finally:
+                connection.close()
 
         return consume_messages()
+        
     
     def ChatDiscovery(self, request, context):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))

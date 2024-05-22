@@ -122,13 +122,13 @@ def create_chat_window(chatter, isGroupChat=False):
             return
         message = message_entry.get()
         if message:
-            display_message(message, True)
+            #display_message(message, True)
             message_entry.delete(0, tk.END)
             with grpc.insecure_channel('localhost:50050') as channel:
                 stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
                 msg = MessageBroker_pb2.ChatMessage(content=message, sender=username, group_chat=chatter)
                 stub.PublishMessageToGroupChat(msg)
-                stub.ConsumeMessagesFromGroupChat(msg)
+                #stub.ConsumeMessagesFromGroupChat(msg)
                 
 
     # Create chat history Text widget
@@ -153,16 +153,23 @@ def create_chat_window(chatter, isGroupChat=False):
     send_button = tk.Button(bottom_frame, text="Send", font=("Verdana", 14), command=send_message, bg="#8FEAE7", activebackground="#3C8CAE")
     send_button.pack(padx=10, pady=10, side=tk.RIGHT)
     
-    global username
-    if(isGroupChat):
+    def consume_messages():
         with grpc.insecure_channel('localhost:50050') as channel:
             stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
             gc_id = MessageBroker_pb2.ChatMessage(content='', sender=username, group_chat=chat_id.get())
             messages = stub.ConsumeMessagesFromGroupChat(gc_id)
-            for msg in messages:
-                msg_info = f"{msg.sender}:{msg.content}"
-                display_message(msg_info, False, True)
-        
+            if(messages is not None):
+                for msg in messages:
+                    msg_info = f"{msg.sender}:{msg.content}"
+                    display_message(msg_info, False, True)
+            else:
+                print("No messages recieved yet")
+                
+    global username
+    if(isGroupChat):
+        consumer_thread = threading.Thread(target=consume_messages)
+        consumer_thread.daemon = True  # Allows the program to exit even if the thread is running
+        consumer_thread.start()
     
 # Connects to chat and shows chat options
 def connect_Chat():
@@ -283,7 +290,7 @@ def display_discovery_results(groups):
     discovery_window.configure(bg="#333")
 
     def enter_discovered_gc():
-        create_chat_window(group, isGroupChat=True)
+        create_chat_window(group, True)
 
     header = tk.Label(discovery_window, text="Active Group Chats", bg="#333", fg="white", font=("Verdana", 15))
     header.pack(pady=10)
