@@ -31,10 +31,20 @@ class RedisService:
         user_info = user_info.split(':')
         new_user_info = f"{user_info[0]}:{user_info[1]}:False"
         r.set(request.username, new_user_info)
-        
     
     def update_groups_list(self, request):
         r.set('group_chats', f"{r.get('group_chats')}{request.address},")
+        
+    def get_connected_users_list(self):
+        keys = r.keys('*')
+        connected_users = ''
+        for key in keys:
+            if(key == 'group_chats' or key == 'user_port'):
+                continue
+            user = r.get(key)
+            if(user.split(':')[2] == 'True'):
+                connected_users = f"{connected_users}{key},"
+        return connected_users
         
 
 registration_service = RedisService()

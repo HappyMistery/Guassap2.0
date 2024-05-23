@@ -327,20 +327,23 @@ def discover_chats():
     with grpc.insecure_channel('localhost:50050') as channel:   # Connect through gRPC with Message Broker
         stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
         groups = stub.ChatDiscovery(MessageBroker_pb2.google_dot_protobuf_dot_empty__pb2.Empty())
+    with grpc.insecure_channel('localhost:50051') as channel:   # Connect through gRPC with Name Server
+        stub = NameServer_pb2_grpc.NameServerStub(channel)
+        discovered_users = stub.GetConnectedUsersList(NameServer_pb2.google_dot_protobuf_dot_empty__pb2.Empty())
+    global discovery_window
+    discovery_window = tk.Toplevel(window)
+    discovery_window.title("Discover new chats")
+    discovery_window.geometry("400x600+500+100")
+    discovery_window.configure(bg="#333")
     display_discovered_groups(groups)   #display discovered group chats
+    display_discovered_users(discovered_users)
 
 
 # Display discovery results in a new window
 def display_discovered_groups(groups):
-    global discovery_window
-    discovery_window = tk.Toplevel(window)
-    discovery_window.title("Discover Active Group Chats")
-    discovery_window.geometry("400x600+500+100")
-    discovery_window.configure(bg="#333")
-
     header = tk.Label(discovery_window, text="Active Group Chats", 
                       bg="#333", fg="white", font=("Verdana", 15))
-    header.pack(pady=10)
+    header.pack(pady=10, padx=10)
     groups_list = groups.group_chat.split(',')  # Group chats are all in a string separated by ',' so we get every group chat
     unique_strings = list(set(groups_list)) # We delete possible duplicates
     for group in unique_strings:
@@ -350,6 +353,21 @@ def display_discovered_groups(groups):
                                                 command=lambda group=group: create_chat_window(group, True), 
                                                 bg="#555", activebackground="#575")
             discovered_group_button.pack(pady=5, padx=10, fill=tk.X)
+            
+def display_discovered_users(users):
+    global username
+    header = tk.Label(discovery_window, text="Connected Users", 
+                      bg="#333", fg="white", font=("Verdana", 15))
+    header.pack(pady=10, padx=10)
+    users_list = users.username.split(',')  # Connected users are all in a string separated by ',' so we get every user
+    unique_strings = list(set(users_list)) # We delete possible duplicates
+    for user in unique_strings:
+        if(user != '' and user != username):    # Don't take neither empty srtings nor the user's username as connected users
+            # Create a chat window for the selected user
+            discovered_user_button = tk.Button(discovery_window, text=user, 
+                                                command=lambda user=user: create_chat_window(user, False), 
+                                                bg="#555", activebackground="#575")
+            discovered_user_button.pack(pady=5, padx=10, fill=tk.X)
 
 
 # Accesses the insult channel

@@ -6,12 +6,6 @@ message IdChat {
   string id = 1;
 }
 
-// Message representing a chat namespace entry
-message ChatNamespaceEntry {
-  string id = 1;
-  string address = 2;
-}
-
 // Message representing a user and their address
 message UserAddress {
   string username = 1;
@@ -46,4 +40,7 @@ service NameServer {
 
   // Gets all the groups from the groups list
   rpc GetGroupsList (google.protobuf.Empty) returns (ChatAddress);
+
+  // Gets all of the connected user's keys in the redis server
+  rpc GetConnectedUsersList (google.protobuf.Empty) returns (UserAddress);
   }

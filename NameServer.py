@@ -52,3 +52,8 @@ class NameServerServicer(NameServer_pb2_grpc.NameServerServicer):
         groups = registration_service.get_user_info(group_chats_list)
         response = NameServer_pb2.ChatAddress(address=groups)
         return response
+    
+    def GetConnectedUsersList(self, request, context):
+        keys = registration_service.get_connected_users_list()
+        users = NameServer_pb2.UserAddress(username=keys, ip_address='')
+        return users
