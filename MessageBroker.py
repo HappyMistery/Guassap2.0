@@ -100,6 +100,7 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
             stub = NameServer_pb2_grpc.NameServerStub(channel)
             groups = stub.GetGroupsList(NameServer_pb2.google_dot_protobuf_dot_empty__pb2.Empty())
         response = MessageBroker_pb2.ChatMessage(content='', sender='', group_chat=groups.address)
+        connection.close()
         return response
         
         

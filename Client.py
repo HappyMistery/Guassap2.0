@@ -34,9 +34,7 @@ class ChatServiceServicer(Client_pb2_grpc.ChatServiceServicer):
 #=======================================================================================================================
 #Header that contains the logo and Username
 def add_header(w):
-    global logo
-    global header_frame
-    global logo_label
+    global logo, header_frame, logo_label
     header_frame = tk.Frame(w, bg="#222", width=w.winfo_width())
     header_frame.pack(fill=tk.X, padx=10, pady=10, anchor="nw")
     logo_label = tk.Label(header_frame, image=logo, 
@@ -123,20 +121,18 @@ def display_message(message, is_user, is_gc_msg=False):
     
 # Creates a new chat window for a given chatter (chatter can be another user's id or a group chat's id)
 def create_chat_window(chatter, isGroupChat=False):
-    global chat_window
-    global chat_id
+    global chat_window, chat_id, usr_label, message_container
     chat_window = tk.Toplevel(window)
     chat_window.title(f'Guassap2.0 - Chat with {chatter}')
     chat_window.geometry("570x750+350+20")  # Width x height + X offset + Y offset
     chat_window.configure(bg="#333")
     add_header(chat_window)
-    global usr_label
+    
     usr_label = tk.Label(header_frame, text=chatter, bg="#222", 
                          fg="white", font=("Verdana", 15))
     usr_label.pack(anchor="n", pady=33)
 
     # Create chat history Text widget (Where all the chat messages are displayed)
-    global message_container
     chat_history = tk.Frame(chat_window, bg="#333")
     chat_history.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
     message_container = tk.Canvas(chat_history, bg="#333")
@@ -149,8 +145,7 @@ def create_chat_window(chatter, isGroupChat=False):
 
     # Function to send message
     def send_message():
-        global empty
-        global username
+        global empty, username, message_entry
         message = message_entry.get()
         if(not isGroupChat):
             empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
@@ -173,7 +168,6 @@ def create_chat_window(chatter, isGroupChat=False):
                 stub.PublishMessageToGroupChat(msg)
                 
     # Create Message entry field where the user writes its messages 
-    global message_entry
     message_entry = tk.Entry(bottom_frame, bg="#777" ,font=("Verdana", 14))
     message_entry.pack(padx=20, pady=10, side=tk.LEFT, fill=tk.X, expand=True)
     
@@ -184,12 +178,13 @@ def create_chat_window(chatter, isGroupChat=False):
                             activebackground="#3C8CAE")
     send_button.pack(padx=10, pady=10, side=tk.RIGHT)
     
+    
     # Starts consuming messages from a group chat (exchange)
     def consume_messages():
         with grpc.insecure_channel('localhost:50050') as channel: # Connect through gRPC with Message Broker
             stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
             gc_id = MessageBroker_pb2.ChatMessage(content='', sender=username, 
-                                                  group_chat=chat_id.get())
+                                                  group_chat=chatter)
             messages = stub.ConsumeMessagesFromGroupChat(gc_id)
             if(messages is not None):   # If there is some message to recieve
                 for msg in messages:
@@ -197,6 +192,7 @@ def create_chat_window(chatter, isGroupChat=False):
                     display_message(msg_info, False, True)  # Display message on user's screen
             else:
                 print("No messages recieved yet")
+                
                 
     # In order to consume from a group chat without blocking the UI, we run the consuming part through a thread
     if(isGroupChat):
@@ -228,11 +224,11 @@ def connect_private_chat():
     
 # Starts a gRPC connection for a private chat
 def start_grpc_client():
+    global response
     with grpc.insecure_channel('localhost:50051') as channel:   # Connect through gRPC with Name Server
         stub = NameServer_pb2_grpc.NameServerStub(channel)
         target = NameServer_pb2.UserAddress(username=user_id.get(), 
                                             ip_address='localhost')
-        global response
         response = stub.GetUserInfo(target)
         channel.close()
         if(response.address == 'None'): # Check if the user exists
@@ -241,30 +237,28 @@ def start_grpc_client():
             no_user_lbl.pack(pady=10, padx=10)
             no_user_lbl.after(1500, no_user_lbl.destroy)
             return
-    try:    # Try to connect with a user to check if they are connected or not
-        with grpc.insecure_channel(response.address) as channel:
-            stub = Client_pb2_grpc.ChatServiceStub(channel)
-            message = Client_pb2.Message(content='testing connection')
-            stub.SendPrivateMessage(message)
-        print(f'Connecting with {user_id.get()} with address {response.address}')
-        create_chat_window(user_id.get())
-    except Exception as e:  # If we catch an exception, the user is not connected at the moment
-        no_user_lbl = tk.Label(window, text=f'User {user_id.get()} is not connected',
-                               bg="#333", fg="white", font=("Verdana", 15))
-        no_user_lbl.pack(pady=10, padx=10)
-        no_user_lbl.after(1500, no_user_lbl.destroy)    # Message auto destroys after 1.5s
-        return
+        user_connection=response.address.split(":")[2] # User address is displayed as ip:port:connected so we split it by ':'
+        print(user_connection)
+        if(user_connection == 'True'):  
+            print(f'Connecting with {user_id.get()} with address {response.address}')
+            create_chat_window(user_id.get())
+        else:
+            no_user_lbl = tk.Label(window, text=f'User {user_id.get()} is not connected',
+                                bg="#333", fg="white", font=("Verdana", 15))
+            no_user_lbl.pack(pady=10, padx=10)
+            no_user_lbl.after(1500, no_user_lbl.destroy)    # Message auto destroys after 1.5s
+            return
 
 
 
 # Connects to a group chat
 def connect_group_chat():
+    global chat_id
     for button in chat_buttons:
         button.pack_forget()    # Hide Chat Options
     gc_ID_label = tk.Label(connect_gc_frame, text="Which chat you want to connect to?",
                            bg="#333", fg="white", font=("Verdana", 15))
     gc_ID_label.grid(row=0, column=0, padx=10, pady=10)
-    global chat_id
     chat_id = tk.Entry(connect_gc_frame)    # Ask the User for a group chat's id to connect and chat
     chat_id.grid(row=1, column=0, padx=10)
     connect_button = tk.Button(connect_gc_frame, text="Connect", 
@@ -296,6 +290,7 @@ def start_group_chat():
 
 #Subscribes to a Group Chat
 def subscribe_GC():
+    global chat_id
     hide_options()
     
     for button in chat_buttons:
@@ -303,7 +298,6 @@ def subscribe_GC():
     gc_ID_label = tk.Label(subscribe_gc_frame, text="Which chat you want to subscribe to?",
                            bg="#333", fg="white", font=("Verdana", 15))
     gc_ID_label.grid(row=0, column=0, padx=10, pady=10)
-    global chat_id
     chat_id = tk.Entry(subscribe_gc_frame)  # Ask the User for a group chat's id to subscribe to
     chat_id.grid(row=1, column=0, padx=10)
     subscribe_button = tk.Button(subscribe_gc_frame, text="Subscribe", 
@@ -344,9 +338,6 @@ def display_discovered_groups(groups):
     discovery_window.geometry("400x600+500+100")
     discovery_window.configure(bg="#333")
 
-    def enter_discovered_gc():
-        create_chat_window(group, True) # Create a chat window for the selected group
-
     header = tk.Label(discovery_window, text="Active Group Chats", 
                       bg="#333", fg="white", font=("Verdana", 15))
     header.pack(pady=10)
@@ -354,9 +345,10 @@ def display_discovered_groups(groups):
     unique_strings = list(set(groups_list)) # We delete possible duplicates
     for group in unique_strings:
         if(group != ''):    # Don't take empty srtings as group chats' id
+            # Create a chat window for the selected group
             discovered_group_button = tk.Button(discovery_window, text=group, 
-                                                command=enter_discovered_gc, bg="#555", 
-                                                activebackground="#575")
+                                                command=lambda group=group: create_chat_window(group, True), 
+                                                bg="#555", activebackground="#575")
             discovered_group_button.pack(pady=5, padx=10, fill=tk.X)
 
 
@@ -372,15 +364,28 @@ def access_insult_channel():
 #=======================================================================================================================
 def start():
     #Create the window
-    global connected
+    global connected, window, logo, frame, option_buttons, chat_buttons, chat_frame
+    global subscribe_gc_frame, connect_gc_frame, back_button, switch_user_button
     connected = False
-    global window
     window = tk.Tk()
     window.title("Guassap2.0")
     window.geometry("750x500+300+100")  # Width x height + X offset + Y offset
     window.configure(bg="#333")
     
-    global logo
+    def on_closing():
+        try:
+            with grpc.insecure_channel('localhost:50051') as channel:   # Connect through gRPC with Name Server
+                stub = NameServer_pb2_grpc.NameServerStub(channel)
+                user = NameServer_pb2.UserAddress(username=username, 
+                                                ip_address='localhost')
+                stub.LogoutUser(user)
+                window.destroy()
+        except Exception as e:
+            print(e)
+            window.destroy()
+    
+    window.protocol("WM_DELETE_WINDOW", on_closing)
+
     logo = tk.PhotoImage(file="./Guassap2.0.png")
     logo = logo.subsample(8)
     
@@ -388,11 +393,7 @@ def start():
     
     # Get the user's name and registers it or logs it in
     def set_username_and_close():
-        global username
-        global user
-        global user_port
-        global cli_server
-        global connected
+        global username, user, user_port, usr_label, cli_server, connected
         username = username_entry.get()
         
         with grpc.insecure_channel('localhost:50051') as channel:   # Connect through gRPC with Name Server
@@ -403,7 +404,7 @@ def start():
             myself = NameServer_pb2.UserAddress(username=username, 
                                                 ip_address='localhost')
             my_info = stub.GetUserInfo(myself)
-            user_port=my_info.address.split(":")[1] # User address is displayed as ip:port so we split it by ':'
+            user_port=my_info.address.split(":")[1] # User address is displayed as ip:port:connected so we split it by ':'
             channel.close()
         if response.success:
             print("Usuari Registrat")
@@ -418,7 +419,6 @@ def start():
         connected = True
         
         # We display the user's name on the top right corner
-        global usr_label
         usr_label = tk.Label(header_frame, text=username, 
                              bg="#222", fg="white", font=("Verdana", 15))
         usr_label.pack(anchor="ne", padx=10, pady=30)
@@ -426,7 +426,6 @@ def start():
         show_options()
     
     # Create a main frame
-    global frame
     frame = tk.Frame(window, bg="#333")
     frame.pack(pady=10, anchor="n")
     
@@ -442,7 +441,6 @@ def start():
     username_button.grid(row=2, column=0, padx=10, pady=15)
     
     # Create Option Menu Buttons
-    global option_buttons
     option_buttons = []
     button = tk.Button(window, text="Connect chat", 
                        command=connect_Chat, 
@@ -470,7 +468,6 @@ def start():
     option_buttons.append(button)
     
     # Create private and group chat buttons
-    global chat_buttons
     chat_buttons = []
     private_chat = tk.Button(window, text="Private Chat", 
                              command=connect_private_chat, 
@@ -485,23 +482,18 @@ def start():
                            activebackground="#575")
     chat_buttons.append(group_chat)
     
-    global chat_frame
-    global subscribe_gc_frame
-    global connect_gc_frame
     chat_frame = tk.Frame(window, bg="#333")
     subscribe_gc_frame = tk.Frame(window, bg="#333")
     connect_gc_frame = tk.Frame(window, bg="#333")
     
     # Create 'Back to Menu' button
-    global back_button 
     back_button = tk.Button(window, text="Back to Menu", 
                             command=show_options,
                             font=("Arial", 12), width=15, 
                             padx=10, pady=10, bg="#777", 
                             activebackground="#575")
     
-    # Create 'Switch user' button
-    global switch_user_button 
+    # Create 'Switch user' button 
     switch_user_button = tk.Button(window, text="Switch User", 
                                    command=switch_user,
                             font=("Arial", 12), width=15, 

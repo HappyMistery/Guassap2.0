@@ -35,6 +35,9 @@ service NameServer {
   // Gets the ip:port of a given username
   rpc GetUserInfo (UserAddress) returns (ChatAddress) {};
 
+  // Sets the connected field of a user (ip:port:connected) to 'False'
+  rpc LogoutUser (UserAddress) returns (google.protobuf.Empty);
+
   // Retrieves the address associated with a chat ID
   rpc GetChatAddress (IdChat) returns (ChatAddress);
 

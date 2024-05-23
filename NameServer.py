@@ -36,6 +36,12 @@ class NameServerServicer(NameServer_pb2_grpc.NameServerServicer):
             response.address = u_info
         return response
     
+    def LogoutUser(self, request, context):
+        registration_service.logout_user(request)
+        empty = NameServer_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
+        return empty
+        
+    
     def UpdateGroupsList(self, request, context):
         registration_service.update_groups_list(request)
         response = NameServer_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
