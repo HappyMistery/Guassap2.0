@@ -29,4 +29,7 @@ service MessageBroker {
 
   // gets all the group chats
   rpc ChatDiscovery (google.protobuf.Empty) returns (ChatMessage);
+
+  // creates a queue for the insulting channel
+  rpc UseInsultChannel (ChatMessage) returns (ChatMessage);
 }

@@ -120,7 +120,7 @@ def display_message(message, is_user, is_gc_msg=False):
     
     
 # Creates a new chat window for a given chatter (chatter can be another user's id or a group chat's id)
-def create_chat_window(chatter, isGroupChat=False):
+def create_chat_window(chatter, isGroupChat=False, isInsultingChannel=False):
     global chat_window, chat_id, usr_label, message_container, message_entry, consumer_thread
     chat_window = tk.Toplevel(window)
     chat_window.title(f'Guassap2.0 - Chat with {chatter}')
@@ -166,7 +166,7 @@ def create_chat_window(chatter, isGroupChat=False):
     def send_message():
         global empty, username, message_entry
         message = message_entry.get()
-        if(not isGroupChat):
+        if(not isGroupChat and not isInsultingChannel):
             empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
             if message:
                 display_message(message, True)
@@ -177,14 +177,27 @@ def create_chat_window(chatter, isGroupChat=False):
                     stub.SendPrivateMessage(message)
                     stub.RecievePrivateMessage(empty)
             return
+        if(isGroupChat):
+            if message:
+                message_entry.delete(0, tk.END)
+                with grpc.insecure_channel('localhost:50050') as channel:   # Connect through gRPC with Message Broker
+                    stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
+                    msg = MessageBroker_pb2.ChatMessage(content=message, 
+                                                        sender=username, 
+                                                        group_chat=chatter)
+                    stub.PublishMessageToGroupChat(msg)
+            return
         if message:
-            message_entry.delete(0, tk.END)
-            with grpc.insecure_channel('localhost:50050') as channel:   # Connect through gRPC with Message Broker
-                stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
-                msg = MessageBroker_pb2.ChatMessage(content=message, 
-                                                    sender=username, 
-                                                    group_chat=chatter)
-                stub.PublishMessageToGroupChat(msg)
+                message_entry.delete(0, tk.END)
+                with grpc.insecure_channel('localhost:50050') as channel:   # Connect through gRPC with Message Broker
+                    stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
+                    msg = MessageBroker_pb2.ChatMessage(content=message, 
+                                                        sender=username, 
+                                                        group_chat=chatter)
+                    empty = Client_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
+                    insult = stub.UseInsultChannel(msg)
+                    display_message(insult.content, False)
+        return
                 
     # Create Message entry field where the user writes its messages 
     message_entry = tk.Entry(bottom_frame, bg="#777" ,font=("Verdana", 14))
@@ -218,10 +231,16 @@ def create_chat_window(chatter, isGroupChat=False):
         consumer_thread = threading.Thread(target=consume_messages)
         consumer_thread.daemon = True  # Allows the program to exit even if the thread is running
         consumer_thread.start()
-        
-        
-        
 
+    if(isInsultingChannel):
+        with grpc.insecure_channel('localhost:50050') as channel:   # Connect through gRPC with Message Broker
+            stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
+            msg = MessageBroker_pb2.ChatMessage(content='', 
+                                                        sender=username, 
+                                                        group_chat=chatter)
+            insult = stub.UseInsultChannel(msg)
+            display_message(insult.content, False)
+        
     
 # Connects to a private chat
 def connect_private_chat():
@@ -403,7 +422,7 @@ def display_discovered_users(users):
 # Accesses the insult channel
 def access_insult_channel():
     hide_options()
-    print("access_insult_channel()")
+    create_chat_window("insultingServer", isInsultingChannel=True)
 
 
 

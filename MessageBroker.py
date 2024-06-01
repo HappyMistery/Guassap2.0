@@ -133,6 +133,28 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
         connection.close()
         return response
         
+
+    def UseInsultChannel(self, request, context):
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        channel = connection.channel()
+
+        # Declare the insult queue
+        queue = 'insults_queue'
+        channel.queue_declare(queue=queue, durable=True)
+
+        if(request.content == ''):
+            print("publishing first insult")
+            channel.basic_publish(exchange='', routing_key=queue, body="tonto")
+        else:
+            print("publishing other insults")
+            channel.basic_publish(exchange='', routing_key=queue, body=request.content)
+        time.sleep(0.5)
+        method_frame, header_frame, insult = channel.basic_get(queue='insults_queue', auto_ack=True)
+
+        connection.close()
+
+        response = MessageBroker_pb2.ChatMessage(content=insult, sender='', group_chat='')
+        return response
         
         
         
