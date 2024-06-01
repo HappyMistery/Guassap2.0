@@ -17,6 +17,8 @@ def start():
         MessageBroker_pb2_grpc.add_MessageBrokerServicer_to_server(MessageBrokerServicer(), broker)
         broker.add_insecure_port('localhost:50050')
         broker.start()
+        global connection_events 
+        connection_events = {}
     except Exception as e:
         print("MessageBroker already started")
     try:
@@ -53,6 +55,7 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
         connection.close()
         subscription = MessageBroker_pb2.Subscription(subscribed='True')
         return subscription
+    
 
     def PublishMessageToGroupChat(self, request, context):
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
@@ -68,28 +71,55 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
         empty = MessageBroker_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
         return empty
     
+    
     def ConsumeMessagesFromGroupChat(self, request, context):
+        global connection_events 
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
         
         queue = f"{request.group_chat}_{request.sender}"
         channel.queue_declare(queue=queue, durable=True)
+        connection_events[queue] = threading.Event()
+        connection_events[queue].set()
+        connection_events[queue].wait()
 
         def consume_messages():
+            connection_events[queue].wait()
             while not context.is_active():
                 time.sleep(0.1)
-            
             try:
                 for method_frame, properties, body in channel.consume(queue=queue):
                     msg_info = body.decode().split(":", 1)
                     response = MessageBroker_pb2.ChatMessage(content=msg_info[1], sender=msg_info[0], group_chat=request.group_chat)
                     yield response
-                    if not context.is_active():
+                    print(f"{queue} --> {connection_events[queue].is_set()}")
+                    if(connection_events[queue].is_set() == False):
+                        print(f"closing connection with group {request.group_chat}")
+                        connection.close()
                         break
+            except Exception as e:
+                print(f"Exception {e}")
+                connection.close()
+                channel.close()
             finally:
                 connection.close()
-
+        
+        consumer_thread = threading.Thread(target=consume_messages)
+        consumer_thread.daemon = True  # Allows the program to exit even if the thread is running
+        consumer_thread.start()
+        consumer_thread.join()
+        
         return consume_messages()
+    
+    def EndConsumption(self, request, context):
+        queue = f"{request.group_chat}_{request.sender}"
+        if(connection_events[queue].is_set()):
+            connection_events[queue].clear()
+            print(f"Connection {queue} --> {connection_events[queue].is_set()}")
+        else:
+            print("Cant' close connection because it's already closed")
+        empty = MessageBroker_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
+        return empty
         
     
     def ChatDiscovery(self, request, context):

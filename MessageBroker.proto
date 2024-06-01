@@ -24,6 +24,9 @@ service MessageBroker {
   // consume messages from a group chat
   rpc ConsumeMessagesFromGroupChat (ChatMessage) returns (stream ChatMessage);
 
+  // stops the consumption of a group chat
+  rpc EndConsumption (ChatMessage) returns (google.protobuf.Empty);
+
   // gets all the group chats
   rpc ChatDiscovery (google.protobuf.Empty) returns (ChatMessage);
 }

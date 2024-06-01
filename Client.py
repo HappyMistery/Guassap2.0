@@ -121,7 +121,7 @@ def display_message(message, is_user, is_gc_msg=False):
     
 # Creates a new chat window for a given chatter (chatter can be another user's id or a group chat's id)
 def create_chat_window(chatter, isGroupChat=False):
-    global chat_window, chat_id, usr_label, message_container
+    global chat_window, chat_id, usr_label, message_container, message_entry, consumer_thread
     chat_window = tk.Toplevel(window)
     chat_window.title(f'Guassap2.0 - Chat with {chatter}')
     chat_window.geometry("570x750+350+20")  # Width x height + X offset + Y offset
@@ -131,6 +131,25 @@ def create_chat_window(chatter, isGroupChat=False):
     usr_label = tk.Label(header_frame, text=chatter, bg="#222", 
                          fg="white", font=("Verdana", 15))
     usr_label.pack(anchor="n", pady=33)
+    
+    
+    def on_chat_closing():
+        try:
+            print(f"Closing connection {chatter}_{username}")
+            with grpc.insecure_channel('localhost:50050') as channel:    # Connect through gRPC with Message Broker
+                stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
+                msg = MessageBroker_pb2.ChatMessage(content='', 
+                                                    sender=username, 
+                                                    group_chat=chatter)
+                stub.EndConsumption(msg)
+            #consumer_thread.join(2)
+            chat_window.destroy()
+        except Exception as e:
+            print(e)
+            chat_window.destroy()
+    
+    chat_window.protocol("WM_DELETE_WINDOW", on_chat_closing)
+    
 
     # Create chat history Text widget (Where all the chat messages are displayed)
     chat_history = tk.Frame(chat_window, bg="#333")
@@ -192,7 +211,7 @@ def create_chat_window(chatter, isGroupChat=False):
                     display_message(msg_info, False, True)  # Display message on user's screen
             else:
                 print("No messages recieved yet")
-                
+    
                 
     # In order to consume from a group chat without blocking the UI, we run the consuming part through a thread
     if(isGroupChat):
@@ -350,10 +369,21 @@ def display_discovered_groups(groups):
         if(group != ''):    # Don't take empty srtings as group chats' id
             # Create a chat window for the selected group
             discovered_group_button = tk.Button(discovery_window, text=group, 
-                                                command=lambda group=group: create_chat_window(group, True), 
+                                                command=lambda group=group: join_discovered_group(group), 
                                                 bg="#555", activebackground="#575")
             discovered_group_button.pack(pady=5, padx=10, fill=tk.X)
             
+# Subscribes to a discovered group chat and connects to it
+def join_discovered_group(group):
+    global username
+    with grpc.insecure_channel('localhost:50050') as channel:   # Connect through gRPC with Message Broker
+        stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
+        gc = MessageBroker_pb2.ChatMessage(content='', sender=username, 
+                                           group_chat=group)
+        stub.SubscribeToGroupChat(gc)
+        create_chat_window(group, True)
+        
+        
 def display_discovered_users(users):
     global username
     header = tk.Label(discovery_window, text="Connected Users", 
