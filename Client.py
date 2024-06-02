@@ -334,29 +334,45 @@ def start_group_chat():
 
 #Subscribes to a Group Chat
 def subscribe_GC():
-    global chat_id
+    global chat_id, is_transient
+    is_transient = "False"
     hide_options()
     
     for button in chat_buttons:
         button.pack_forget()    # Hide Chat Options
+        
+    def on_checkbox_toggle():
+        global is_transient
+        if(is_transient == "False"):
+            is_transient = "True"
+        else:
+            is_transient = "False"
+    
     gc_ID_label = tk.Label(subscribe_gc_frame, text="Which chat you want to subscribe to?",
                            bg="#333", fg="white", font=("Verdana", 15))
     gc_ID_label.grid(row=0, column=0, padx=10, pady=10)
     chat_id = tk.Entry(subscribe_gc_frame)  # Ask the User for a group chat's id to subscribe to
     chat_id.grid(row=1, column=0, padx=10)
+    transient_group_checkbox = tk.Checkbutton(subscribe_gc_frame, 
+                                              text="Don't preserve group chat history", 
+                                              command=on_checkbox_toggle, 
+                                              bg="#333", activebackground="#333")
+    transient_group_checkbox.grid(row=2, column=0, padx=10, pady=5)
     subscribe_button = tk.Button(subscribe_gc_frame, text="Subscribe", 
                                  command=subscribe_to_gc, bg="#555", 
                                  activebackground="#575")
-    subscribe_button.grid(row=2, column=0, padx=10, pady=15)
+    subscribe_button.grid(row=3, column=0, padx=10, pady=10)
     subscribe_gc_frame.pack(padx=10, pady=10)
     
     
     
 # Subscribes to a group chat
 def subscribe_to_gc():
+    global is_transient
     with grpc.insecure_channel('localhost:50050') as channel:   # Connect through gRPC with Message Broker
         stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
-        gc = MessageBroker_pb2.ChatMessage(content='', sender=username, 
+        print(is_transient)
+        gc = MessageBroker_pb2.ChatMessage(content=is_transient, sender=username, 
                                            group_chat=chat_id.get())
         stub.SubscribeToGroupChat(gc)
     sub_lbl = tk.Label(window, text=f'Subscribed to group chat {chat_id.get()}!',

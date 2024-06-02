@@ -36,10 +36,19 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
         exchange = f"exchange_{request.group_chat}"
         queue = f"{request.group_chat}_{request.sender}"
         
-        channel.exchange_declare(exchange=exchange, exchange_type='fanout', durable=True)
+        try:
+            channel.exchange_declare(exchange=exchange, exchange_type='fanout', passive=True)
+        except Exception as e:
+            if(request.content == "False"):
+                channel = connection.channel()
+                channel.exchange_declare(exchange=exchange, exchange_type='fanout', durable=True)
+            if(request.content == "True"):
+                channel = connection.channel()
+                channel.exchange_declare(exchange=exchange, exchange_type='fanout')
 
         if(request.content == 'check'):
             try:
+                channel = connection.channel()
                 channel.queue_declare(queue=queue, passive=True, durable=True)
                 subscription = MessageBroker_pb2.Subscription(subscribed='True')
                 connection.close()
@@ -47,7 +56,16 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
                 subscription = MessageBroker_pb2.Subscription(subscribed='False')
             return subscription
         
-        channel.queue_declare(queue=queue, durable=True)
+        try:
+            channel = connection.channel()
+            channel.queue_declare(queue=queue, passive=True)
+        except Exception as e:
+            if(request.content == "False"):
+                channel = connection.channel()
+                channel.queue_declare(queue=queue, durable=True)
+            if(request.content == "True"):
+                channel = connection.channel()
+                channel.queue_declare(queue=queue)
         channel.queue_bind(exchange=exchange, queue=queue)
         with grpc.insecure_channel('localhost:50051') as channel:
             stub = NameServer_pb2_grpc.NameServerStub(channel)
@@ -59,14 +77,28 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
     
 
     def PublishMessageToGroupChat(self, request, context):
+        global is_transient
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
+        is_transient = False
         
         exchange = f"exchange_{request.group_chat}"
-        
         msg = f"{request.sender}:{request.content}"
+        queue = f"{request.group_chat}_{request.sender}"
+        try:
+            channel.queue_declare(queue=queue)
+            is_transient = True
+        except Exception as e:
+            channel = connection.channel()
+            channel.queue_declare(queue=queue, durable=True)
+            
 
-        channel.basic_publish(exchange=exchange, routing_key='', body=msg, properties=pika.BasicProperties(delivery_mode=2,))
+        if(is_transient):
+            print("TRANSIENT MESSAGE BEING SENT")
+            channel.basic_publish(exchange=exchange, routing_key='', body=msg)
+        else:
+            print("PERSISTENT MESSAGE BEING SENT")
+            channel.basic_publish(exchange=exchange, routing_key='', body=msg, properties=pika.BasicProperties(delivery_mode=2,))
         connection.close()
         
         empty = MessageBroker_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
@@ -74,22 +106,32 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
     
     
     def ConsumeMessagesFromGroupChat(self, request, context):
-        global connection_events 
+        global connection_events, is_transient
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
+        is_transient = False
         
         queue = f"{request.group_chat}_{request.sender}"
-        channel.queue_declare(queue=queue, durable=True)
+        try:
+            channel.queue_declare(queue=queue)
+            is_transient = True
+            print("CONSUMING TRANSIENT MESSAGES")
+        except Exception as e:
+            channel = connection.channel()
+            channel.queue_declare(queue=queue, durable=True)
+            print("CONSUMING PERSISTENT MESSAGES")
+            
         connection_events[queue] = threading.Event()
         connection_events[queue].set()
         connection_events[queue].wait()
 
+        channel = connection.channel()
         def consume_messages():
             connection_events[queue].wait()
             while not context.is_active():
                 time.sleep(0.1)
             try:
-                for method_frame, properties, body in channel.consume(queue=queue):
+                for method_frame, properties, body in channel.consume(queue=queue, auto_ack=is_transient):
                     msg_info = body.decode().split(":", 1)
                     response = MessageBroker_pb2.ChatMessage(content=msg_info[1], sender=msg_info[0], group_chat=request.group_chat)
                     yield response
