@@ -1,4 +1,5 @@
 from concurrent import futures
+import random
 import threading
 import time
 import grpc
@@ -92,7 +93,6 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
                     msg_info = body.decode().split(":", 1)
                     response = MessageBroker_pb2.ChatMessage(content=msg_info[1], sender=msg_info[0], group_chat=request.group_chat)
                     yield response
-                    print(f"{queue} --> {connection_events[queue].is_set()}")
                     if(connection_events[queue].is_set() == False):
                         print(f"closing connection with group {request.group_chat}")
                         connection.close()
@@ -115,7 +115,6 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
         queue = f"{request.group_chat}_{request.sender}"
         if(connection_events[queue].is_set()):
             connection_events[queue].clear()
-            print(f"Connection {queue} --> {connection_events[queue].is_set()}")
         else:
             print("Cant' close connection because it's already closed")
         empty = MessageBroker_pb2.google_dot_protobuf_dot_empty__pb2.Empty()
@@ -142,15 +141,28 @@ class MessageBrokerServicer(MessageBroker_pb2_grpc.MessageBrokerServicer):
         queue = 'insults_queue'
         channel.queue_declare(queue=queue, durable=True)
 
-        if(request.content == ''):
-            print("publishing first insult")
-            channel.basic_publish(exchange='', routing_key=queue, body="tonto")
-        else:
-            print("publishing other insults")
-            channel.basic_publish(exchange='', routing_key=queue, body=request.content)
-        time.sleep(0.5)
-        method_frame, header_frame, insult = channel.basic_get(queue='insults_queue', auto_ack=True)
+        insults = [
+            "tonto", "bastard", "desgraciat", "subnormal", 
+            "idiota", "imbècil", "cretí", "patètic", 
+            "estúpid", "ignorant", "inútil", "cabró", 
+            "pallasso", "miserable", "tarat", "ruc", 
+            "bàrbar", "neci", "babau", "malparit"
+        ]
 
+        if request.content == '':
+            selected_insults = random.sample(insults, 2)
+            for insult in selected_insults:
+                channel.basic_publish(exchange='', routing_key=queue, body=insult)
+        else:
+            channel.basic_publish(exchange='', routing_key=queue, body=request.content)
+        time.sleep(0.1)
+        try: 
+            method_frame, header_frame, insult = channel.basic_get(queue='insults_queue', auto_ack=True)
+        except Exception as e:
+            response = MessageBroker_pb2.ChatMessage(content='No insultis tant', sender='', group_chat='')
+            connection.close()
+            return response
+        
         connection.close()
 
         response = MessageBroker_pb2.ChatMessage(content=insult, sender='', group_chat='')

@@ -121,7 +121,7 @@ def display_message(message, is_user, is_gc_msg=False):
     
 # Creates a new chat window for a given chatter (chatter can be another user's id or a group chat's id)
 def create_chat_window(chatter, isGroupChat=False, isInsultingChannel=False):
-    global chat_window, chat_id, usr_label, message_container, message_entry, consumer_thread
+    global chat_window, chat_id, usr_label, message_container, message_entry, consumer_thread, connection
     chat_window = tk.Toplevel(window)
     chat_window.title(f'Guassap2.0 - Chat with {chatter}')
     chat_window.geometry("570x750+350+20")  # Width x height + X offset + Y offset
@@ -135,17 +135,18 @@ def create_chat_window(chatter, isGroupChat=False, isInsultingChannel=False):
     
     def on_chat_closing():
         try:
-            print(f"Closing connection {chatter}_{username}")
-            with grpc.insecure_channel('localhost:50050') as channel:    # Connect through gRPC with Message Broker
-                stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
-                msg = MessageBroker_pb2.ChatMessage(content='', 
-                                                    sender=username, 
-                                                    group_chat=chatter)
-                stub.EndConsumption(msg)
-            #consumer_thread.join(2)
+            if(isGroupChat):
+                print(f"Closing connection {chatter}_{username}")
+                with grpc.insecure_channel('localhost:50050') as channel:    # Connect through gRPC with Message Broker
+                    stub = MessageBroker_pb2_grpc.MessageBrokerStub(channel)
+                    msg = MessageBroker_pb2.ChatMessage(content='', 
+                                                        sender=username, 
+                                                        group_chat=chatter)
+                    stub.EndConsumption(msg)
+                #consumer_thread.join(2)
             chat_window.destroy()
         except Exception as e:
-            print(e)
+            print("Exception Happened, do not worry!")
             chat_window.destroy()
     
     chat_window.protocol("WM_DELETE_WINDOW", on_chat_closing)
@@ -171,7 +172,7 @@ def create_chat_window(chatter, isGroupChat=False, isInsultingChannel=False):
             if message:
                 display_message(message, True)
                 message_entry.delete(0, tk.END)
-                with grpc.insecure_channel(response.address) as channel:    # Connect through gRPC with other user
+                with grpc.insecure_channel(connection) as channel:    # Connect through gRPC with other user
                     stub = Client_pb2_grpc.ChatServiceStub(channel)
                     message = Client_pb2.Message(content=message)
                     stub.SendPrivateMessage(message)
@@ -261,27 +262,32 @@ def connect_private_chat():
     
     
 # Starts a gRPC connection for a private chat
-def start_grpc_client():
-    global response
+def start_grpc_client(user=''):
+    global response, connection
     with grpc.insecure_channel('localhost:50051') as channel:   # Connect through gRPC with Name Server
         stub = NameServer_pb2_grpc.NameServerStub(channel)
-        target = NameServer_pb2.UserAddress(username=user_id.get(), 
+        if(user == ''):
+            user_target = user_id.get()
+        else:
+            user_target = user
+        target = NameServer_pb2.UserAddress(username=user_target, 
                                             ip_address='localhost')
         response = stub.GetUserInfo(target)
         channel.close()
         if(response.address == 'None'): # Check if the user exists
-            no_user_lbl = tk.Label(window, text=f'User {user_id.get()} does not exist', 
+            no_user_lbl = tk.Label(window, text=f'User {user_target} does not exist', 
                                    bg="#333", fg="white", font=("Verdana", 15))
             no_user_lbl.pack(pady=10, padx=10)
             no_user_lbl.after(1500, no_user_lbl.destroy)
             return
-        user_connection=response.address.split(":")[2] # User address is displayed as ip:port:connected so we split it by ':'
-        print(user_connection)
+        split = response.address.split(":")
+        connection = f"localhost:{split[1]}"
+        user_connection=split[2] # User address is displayed as ip:port:connected so we split it by ':'
         if(user_connection == 'True'):  
-            print(f'Connecting with {user_id.get()} with address {response.address}')
-            create_chat_window(user_id.get())
+            print(f'Connecting with {user_target} with address {connection}')
+            create_chat_window(user_target)
         else:
-            no_user_lbl = tk.Label(window, text=f'User {user_id.get()} is not connected',
+            no_user_lbl = tk.Label(window, text=f'User {user_target} is not connected',
                                 bg="#333", fg="white", font=("Verdana", 15))
             no_user_lbl.pack(pady=10, padx=10)
             no_user_lbl.after(1500, no_user_lbl.destroy)    # Message auto destroys after 1.5s
@@ -414,7 +420,7 @@ def display_discovered_users(users):
         if(user != '' and user != username):    # Don't take neither empty srtings nor the user's username as connected users
             # Create a chat window for the selected user
             discovered_user_button = tk.Button(discovery_window, text=user, 
-                                                command=lambda user=user: create_chat_window(user, False), 
+                                                command=lambda user=user: start_grpc_client(user), 
                                                 bg="#555", activebackground="#575")
             discovered_user_button.pack(pady=5, padx=10, fill=tk.X)
 
@@ -448,7 +454,7 @@ def start():
                 stub.LogoutUser(user)
                 window.destroy()
         except Exception as e:
-            print(e)
+            print("Exception Happened, do not worry!")
             window.destroy()
     
     window.protocol("WM_DELETE_WINDOW", on_closing)
